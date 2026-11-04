@@ -1,0 +1,8 @@
+source/
+data/
+__pycache__/
+*.tar.gz
+*.zip
+preview.log
+preview.err
+

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A searchable Kingdom Inc reference built from the installed game's code: items, recipes, buildings, research, quests, combat and progression.">
+  <meta name="theme-color" content="#183e35">
+  <title>Kingdom Inc Wiki</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme.css">
+  <script defer src="wiki-data.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+  <aside id="sidebar" class="sidebar" aria-label="Wiki navigation">
+    <a class="brand" href="#page/home"><img class="brand-logo" src="assets/game/KingdomIncLogo.png" alt="Kingdom Inc"><span class="brand-label">THE COMPLETE WIKI</span></a>
+    <p class="edition">A field guide to the entire kingdom</p>
+    <button id="search-focus" class="search-launch">Search the wiki <kbd>/</kbd></button>
+    <nav id="nav"></nav>
+    <div class="sidebar-bottom"><a href="#page/coverage">Build &amp; coverage ↗</a><span>LOCAL CODE · NOV 03, 2026</span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <button id="menu" class="icon-button menu-button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+      <div id="breadcrumb" class="breadcrumb">THE CODEX <span>/</span> Overview</div>
+      <div class="top-actions"><a href="#bookmarks" title="Saved articles">Saved <span id="saved-count">0</span></a><button id="print" class="quiet" title="Print this article">Print ↗</button></div>
+    </header>
+    <div class="searchbar"><label for="search">SEARCH</label><input id="search" type="search" placeholder="Find an item, recipe, mechanic, or source file…" autocomplete="off"><kbd>ESC</kbd></div>
+    <main id="main" tabindex="-1"></main>
+    <footer>Kingdom Inc · An independent, code-derived reference<span id="footer-count"></span></footer>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

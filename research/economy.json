@@ -1,0 +1,1944 @@
+[
+  {
+    "id": "production-simulation",
+    "title": "Production simulation and bottlenecks",
+    "category": "Production",
+    "summary": "How diagrams, pipes, queues, and blocked outputs determine actual throughput.",
+    "sections": [
+      {
+        "title": "Simulation order",
+        "paragraphs": [
+          "The production manager advances the player with Unity's frame delta. Every saved flow diagram is updated, so changing the displayed diagram does not suspend the others. Within each diagram, all buildings update in list order and then all pipes update in list order.",
+          "This is a frame-driven simulation, not a universal once-per-second production tick. Buildings implement their own timers. A nominal items-per-second rate can be limited by frame updates because many building Update methods finish at most one operation per call."
+        ]
+      },
+      {
+        "title": "Pipes and buffers",
+        "paragraphs": [
+          "Pipes repeatedly transfer the first available output item while the receiving input accepts its type and has buffer space. There is no pipe travel-time or pipe-length penalty in the transfer method. Items remain individual inventory objects with their quality, equipment, and character data.",
+          "An input's acceptance filter and its capacity are separate checks. An unacceptable first item marks the pipe as rejected and blocks the queue behind it. A full but otherwise compatible destination simply stalls transfer. Most utility inputs and outputs hold one item; resource outputs normally hold five; recipe inputs hold exactly that reagent's required count."
+        ]
+      },
+      {
+        "title": "Diagnosing a stopped chain",
+        "paragraphs": [
+          "Check the destination's item filter, its input capacity, all output capacities of a multi-output recipe, the building's currency cost, automatic worker, and any shared resource quota or war gate. A craft can wait with its ingredients already consumed until every required output has room.",
+          "Recipe completion checks whether each output has at least one free place, then adds the entire result batch. A large batch may therefore exceed its nominal buffer size. These are queue limits, not an item stack system."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowManager.cs",
+        "line": 129
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 141
+      },
+      {
+        "path": "Assets.Source.Flow/FlowDiagram.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Flow/FlowPipe.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Source.Flow/FlowIO.cs",
+        "line": 32
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 202
+      }
+    ]
+  },
+  {
+    "id": "production-resources",
+    "title": "Resource quotas and harvesting",
+    "category": "Production",
+    "summary": "The shared capacity rules behind mines, suppliers, farms, and recruitment.",
+    "sections": [
+      {
+        "title": "Quota is shared production capacity",
+        "paragraphs": [
+          "Each resource has a global available quota. Approximately every 0.1 seconds the player totals the desired output of every matching resource building in every diagram. If demand exceeds quota, all those buildings receive the same multiplier: quota divided by total demand. Otherwise the multiplier is 1.",
+          "Desired output is zero when a resource building has no queued work or its normal progress is already at least 1. A completed building waiting for output space stops requesting further normal progress. Quota utilization shown in the interface averages recorded demand samples."
+        ]
+      },
+      {
+        "title": "Production and payment",
+        "paragraphs": [
+          "A resource building queues and pays for a normal item before producing it. An automatic Worker queues a new order when the normal queue becomes empty; manual clicks can queue up to five paid orders. Failed payment leaves the order unqueued.",
+          "Actual progress per second is building OutputPerSecond multiplied by the resource quota multiplier. Most resource buildings start at 1 × Speed items per second; Barracks and Adventurers Guild use 0.5 × Speed. Output is blocked when its five-place buffer is full."
+        ]
+      },
+      {
+        "title": "Bonus output and quality",
+        "paragraphs": [
+          "Productivity advances a separate counter using the same quota-adjusted production progress. When the bonus counter reaches 1, the next available output consumes bonus progress instead of normal progress or a paid queued order.",
+          "Resource quality is sampled between square root of building Quality and building Quality. Human recruits also receive the Human Quality prestige bonus before their character data is initialized."
+        ]
+      },
+      {
+        "title": "Quota upgrades",
+        "paragraphs": [
+          "A quota upgrade adds the resource's configured QuotaAmount. Its price is QuotaBaseCost multiplied by the resource's quota growth factor raised to the number of previous quota upgrades. Resource Cost Reduction prestige reduces only the amount above 1 in that growth factor.",
+          "The iron-ore quest discount multiplies quota upgrade prices by 0.25 × 0.95 raised to the repeat discount counter. Resource Artisan variants add a gold surcharge per normal order: resource value × 0.2 per upgrade for ordinary resources, or × 2 per upgrade for recruits."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 338
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 410
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 62
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 98
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 177
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 203
+      }
+    ]
+  },
+  {
+    "id": "production-mines-suppliers",
+    "title": "Mines and supply depots",
+    "category": "Production",
+    "summary": "Choosing raw materials and paying for resource orders.",
+    "sections": [
+      {
+        "title": "Mine",
+        "paragraphs": [
+          "A Mine accepts resource selections tagged Mine. Its displayed name changes for iron ore, sapphire, gold ore, and silver ore. The first Mine is free; later Mines use the normal Resource building price escalation.",
+          "A Mine shares its resource's quota with all other buildings producing that resource. Building more Mines cannot by itself raise the global quota."
+        ]
+      },
+      {
+        "title": "Supply Depot and Adventure Supplies",
+        "paragraphs": [
+          "Supply Depot selects resources tagged Supply and is purchased with Gold. Adventure Supplies selects resources tagged AdventureSupplies and is purchased with Gold and Rings. Both use the standard ResourceElement order, quota, five-item output, quality, and productivity systems.",
+          "Resource selection is restricted to the currently available resources. Quota must be positive for ordinary resources to appear in that list; unlocked farm resources are a special exception."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Mine.cs",
+        "line": 16
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Mine.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/SupplyDepot.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/AdventureSupplies.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 223
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 395
+      }
+    ]
+  },
+  {
+    "id": "production-forest",
+    "title": "Forests and forest crews",
+    "category": "Production",
+    "summary": "Crew allocation, harvest capacity, and workforce costs.",
+    "sections": [
+      {
+        "title": "Crew roles and war gate",
+        "paragraphs": [
+          "The forest workforce has Unassigned, Forager, Logger, and Hunter roles. Assigning workers to an active role consumes the same number of unassigned workers; removing them returns that number to the unassigned pool.",
+          "Harvesting is blocked until forest war stage 1. Each forest resource defines its worker role and WorkersPerItem requirement. Forest buildings requesting the same role compete for that role's assigned crew."
+        ]
+      },
+      {
+        "title": "Capacity formula",
+        "paragraphs": [
+          "For each role, desired workforce is the sum of each active forest's desired items per second × that resource's WorkersPerItem. If demand is above assigned workers, the production multiplier is assigned workers divided by demand. Otherwise it is 1. Actual building output is Speed × that role multiplier.",
+          "Forest orders are paid when queued and have the same five-order manual queue, separate productivity counter, and five-item output buffer as ordinary resource buildings. Quality is sampled between square root of Quality and Quality. Each Forest Artisan adds 20% of resource value in extra gold to each paid order."
+        ]
+      },
+      {
+        "title": "Buying workers",
+        "paragraphs": [
+          "Base worker price is 12 Requisition and 12 Medals. The price multiplier grows by 1.08 raised to total workers, including unassigned workers. Resource Cost Reduction prestige reduces the growth above 1.",
+          "The forest-worker quest discount multiplies price by 0.5 × 0.95 raised to its repeat counter. Forest Workforce technology supplies an additional ×0.5 multiplier."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Player/ForestSettings.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Player/ForestSettings.cs",
+        "line": 53
+      },
+      {
+        "path": "Assets.Source.Player/ForestSettings.cs",
+        "line": 70
+      },
+      {
+        "path": "Assets.Source.Player/ForestSettings.cs",
+        "line": 131
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Forest.cs",
+        "line": 65
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Forest.cs",
+        "line": 138
+      }
+    ]
+  },
+  {
+    "id": "production-farming",
+    "title": "Farming and field expansion",
+    "category": "Production",
+    "summary": "Plots establish farm capacity; farm buildings harvest that capacity.",
+    "sections": [
+      {
+        "title": "Fields and quota",
+        "paragraphs": [
+          "The field begins 3 columns wide and 2 rows high. Each cell can hold a selected unlocked farm resource. Every matching planted cell contributes that resource's configured PlotYield to its global production quota.",
+          "Farms are blocked until eastern war stage 1. Field quota is zero while blocked, and Farm buildings separately check the same war gate approximately once per second. A planted field establishes available capacity; a Farm building still queues and pays for harvested items."
+        ]
+      },
+      {
+        "title": "Expansion costs",
+        "paragraphs": [
+          "A field expansion is priced from 12 Rings and 12 Crowns multiplied by a sum of escalating terms. UpgradeCount is current width + current height − 5. For a request of n new plots, the multiplier is the sum of growth^(UpgradeCount + i), for i from 0 through n − 1.",
+          "The normal growth is 1.2. Resource Cost Reduction prestige reduces the amount of that growth above 1. The farm data declares a maximum width of 6; field dimensions and selected cells are saved."
+        ]
+      },
+      {
+        "title": "Farm output",
+        "paragraphs": [
+          "Each Farm is a standard ResourceElement tagged Farm, with a base desired speed of 1 × Speed while its war gate is open. All Farms harvesting the same crop share the crop quota. Farm Artisan quality and extra order cost follow the resource rules."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Player/FarmSettings.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Source.Player/FarmSettings.cs",
+        "line": 68
+      },
+      {
+        "path": "Assets.Source.Player/FarmSettings.cs",
+        "line": 96
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Farm.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Farm.cs",
+        "line": 42
+      }
+    ]
+  },
+  {
+    "id": "production-crafting",
+    "title": "Crafting, recipes, and automatic work",
+    "category": "Production",
+    "summary": "When ingredients are consumed, how long crafting takes, and what causes blocked crafts.",
+    "sections": [
+      {
+        "title": "Starting a craft",
+        "paragraphs": [
+          "Each recipe declares reagent slots, counts, optional currency cost, result slots, and an unlock technology. The building must support the recipe's tag and the recipe technology must be purchased.",
+          "When no craft is running, a recipe building checks that every reagent input has its full required count. It then pays the recipe's currency cost and removes those items into a persistent CraftingInput. This starts a craft even without an automatic Worker; the Worker controls automatic progress, while manual clicks can progress a started craft."
+        ]
+      },
+      {
+        "title": "Timing",
+        "paragraphs": [
+          "Unless explicitly set, recipe crafting time is (1.5 + 0.5 × total reagent item count) × CraftingTimeMultiplier seconds. Automatic progress per second is Speed divided by CraftingTime. Normal completion resets the running input, after which another ready craft can begin.",
+          "Every recipe output must have room before results are created. This includes an output for an unchanged or transformed input character as well as ordinary items. Recipes with probabilistic results use a single shared output and choose one result by the configured weights."
+        ]
+      },
+      {
+        "title": "Value",
+        "paragraphs": [
+          "A recipe's default base value starts with the base values of value-affecting explicit reagents plus the gold equivalents of currency costs when CostIncreasesValue is enabled. The normal value multiplier is 1 + 0.15 × number of reagent slots + 0.15 if qualifying currency costs exist + 0.025 × CraftingTime; an explicit ValueMultiplier replaces it.",
+          "Filter-based reagents use preview items for the interface but default to not contributing preview value or input quality. Currency rewards are rolled at output quality, rounded, and credited when the craft completes."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 96
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 185
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 280
+      },
+      {
+        "path": "Assets.Source.Items/CraftingRecipe.cs",
+        "line": 72
+      },
+      {
+        "path": "Assets.Source.Items/CraftingRecipe.cs",
+        "line": 217
+      },
+      {
+        "path": "Assets.Source.Items/CraftingReagent.cs",
+        "line": 30
+      }
+    ]
+  },
+  {
+    "id": "production-workshops",
+    "title": "Crafting workshops and their roles",
+    "category": "Production",
+    "summary": "The recipe stations and the shared rules they use.",
+    "sections": [
+      {
+        "title": "Station families",
+        "paragraphs": [
+          "Forge, Blacksmith, Tailor, Leatherworker, Carpenter, Engraver, Campfire, Enchanter, Butcher, Kitchen, Jeweler, Summoning Circle, Alchemist, Inventor, Scribe, Shrine, Graveyard, and Necromancer all derive from RecipeElement. Their recipes use the shared timing, input quality, manual crafting, worker, and output-blocking rules.",
+          "Each station normally offers only its own RecipeTag. The Kitchen is the exception: its recipe menu also offers Campfire recipes, and its computed Speed is doubled after upgrades. This makes it a faster replacement for campfire cooking as well as the station for kitchen-specific meals."
+        ]
+      },
+      {
+        "title": "Purchase currencies",
+        "paragraphs": [
+          "Forge and Blacksmith use Gold. Tailor, Leatherworker, and Carpenter use Gold and Requisition. Campfire and Engraver use Gold and Medals. Enchanter, Butcher, and Kitchen use Gold and Rings. Jeweler, Summoning Circle, Alchemist, Inventor, Scribe, Shrine, Graveyard, and Necromancer use Gold and Ducats.",
+          "The first Forge is free. Crafting stations are stackable; stacking increases Speed, while individual recipe unlocks and per-craft currency costs remain relevant."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items/CraftingRecipe.cs",
+        "line": 130
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Kitchen.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Kitchen.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Forge.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 56
+      }
+    ]
+  },
+  {
+    "id": "production-quality",
+    "title": "Item quality and critical crafting",
+    "category": "Production",
+    "summary": "How ingredient quality, artisans, equipment rolls, and critical crafts interact.",
+    "sections": [
+      {
+        "title": "Craft quality formula",
+        "paragraphs": [
+          "Let A be the average quality of all input items whose reagent slots affect quality; use A = 1 if none qualify. Let B be the building's Quality stat. Set H = B + A − 1. If H < 1, output quality is exactly H. Otherwise output quality is sampled from (A + H)/2 through H.",
+          "For example, average ingredient quality 1.20 and building Quality 1.10 give an output range of 1.25 to 1.30. A plain building with B = 1 preserves uniform ingredient quality. New equipment additionally receives the Equipment Quality prestige bonus."
+        ]
+      },
+      {
+        "title": "Critical craft",
+        "paragraphs": [
+          "With Critical Craft technology, each output quality roll has a 1% chance to add its rolled distance above the minimum a second time. A critical craft is not simply a flat quality multiplier and does nothing when the roll equals the minimum.",
+          "Inventory quality values less than 0.01 away from 1 are snapped to exactly 1. Ordinary item sell value is rounded BaseValue × Quality; equipment adds the sell values of its enhancements."
+        ]
+      },
+      {
+        "title": "Equipment stat rolls",
+        "paragraphs": [
+          "Each equipment base stat rolls from floor(base stat × 0.9 × item quality) up to, but excluding, ceil(base stat × 1.1 × item quality), unless both bounds are equal. Updating quality clears and rerolls these base equipment stats, so a Refiner or quality enhancement can change the rolls as well as the quality number.",
+          "Artisan upgrades add 0.1 to building Quality per copy. Ordinary crafting Artisans also add 10% of the recipe base value per upgrade to per-craft costs, converted into each existing cost currency; recipes without an existing currency cost get a gold surcharge."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 331
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 364
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 67
+      },
+      {
+        "path": "Assets.Source.Items/CraftingResult.cs",
+        "line": 67
+      },
+      {
+        "path": "Assets.Source.Items/InventoryItem.cs",
+        "line": 73
+      },
+      {
+        "path": "Assets.Source.Items/ItemType.cs",
+        "line": 292
+      },
+      {
+        "path": "Assets.Source.Items.Type/EquipmentItemType.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 57
+      },
+      {
+        "path": "SeededRandom.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "production-productivity",
+    "title": "Productivity and handcrafting",
+    "category": "Production",
+    "summary": "Bonus progress produces extra results without spending another set of ingredients.",
+    "sections": [
+      {
+        "title": "How bonus crafts work",
+        "paragraphs": [
+          "Overseer grants 0.1 Productivity per installed upgrade. A recipe adds its BaseProductivity and clamps the final result to at least zero. During normal automatic progress, a separate productivity meter gains normal progress × Productivity; equipment recipes gain half that amount.",
+          "If productivity reaches 1, a completion uses one productivity point while keeping the current normal craft and its original ingredients. A subsequent normal completion consumes the running craft. This produces bonus batches without a fresh reagent set or another start payment.",
+          "Recipes with enhancement results explicitly disable productivity progress. Many character transformation, prayer, burial, or special chance recipes set BaseProductivity to −999, which suppresses ordinary building upgrade productivity after clamping. Manual Handcrafting Productivity prestige is added after that clamp, so it can still accrue bonus progress on such recipes unless enhancement output explicitly disables it."
+        ]
+      },
+      {
+        "title": "Manual crafting",
+        "paragraphs": [
+          "A manual click on a running recipe adds Speed ÷ CraftingTime ÷ 2.5 to normal progress. Equivalently, each click supplies 0.4 seconds of work at the building's current speed. Clicking is available only while a craft exists and its normal progress is below 1.",
+          "Manual productivity uses the final building Productivity plus Handcrafting Productivity prestige, multiplied by the manual progress amount and halved for equipment. Because the prestige bonus is added after the recipe's negative BaseProductivity has already been clamped to zero, a −999 BaseProductivity recipe can still gain manual bonus progress. Enhancement recipes retain their explicit disable check. Manual resource clicks work differently: they purchase queued orders rather than directly adding recipe progress."
+        ]
+      },
+      {
+        "title": "Practical consequences",
+        "paragraphs": [
+          "Faster workers and stacking produce normal and productivity progress faster, but cannot remove a resource quota bottleneck or full output. A bonus result still requires free output capacity.",
+          "The automatic recipe productivity meter only accrues while below 1, and completion creates at most one batch per building update. Frame timing and blocking can therefore affect throughput around very fast or high-productivity setups."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Upgrades/Overseer.cs",
+        "line": 24
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 166
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 193
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 268
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 392
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 168
+      }
+    ]
+  },
+  {
+    "id": "production-upgrades",
+    "title": "Workers, upgrades, stacking, and refunds",
+    "category": "Production",
+    "summary": "The common upgrade system used by production and service buildings.",
+    "sections": [
+      {
+        "title": "Worker and speed",
+        "paragraphs": [
+          "The first Worker enables CanAutoCraft and adds no speed bonus. Each additional Worker of that exact type adds 0.5 Speed. Speed bonuses add to a base of 1, then the result is multiplied by StackSize.",
+          "Repeat Workers are permitted on resource buildings, recipe buildings, Shops, Forests, Training Grounds, and Disenchanters. Other building types normally allow only one Worker. Some services, including Inn, Luxury Shop, and Mercenary Guild, are intrinsically automatic."
+        ]
+      },
+      {
+        "title": "Upgrade slots and costs",
+        "paragraphs": [
+          "Technology grants upgrade slots and the set of available upgrades separately for each building type. Upgrade effects are recalculated from the installed upgrades. The nth copy of a particular upgrade type is counted independently of other types.",
+          "The shared upgrade price uses a base of 858, the upgrade's CostMultiplier, and a ×1.5 price factor for each existing upgrade of the same exact type. Its cost tier is the larger of the upgrade's minimum tier and building cost tier plus that existing count. Currency conversion, rounding, and deterministic identifier variation also affect the displayed price."
+        ]
+      },
+      {
+        "title": "Stacking and construction prices",
+        "paragraphs": [
+          "The base building price uses 780 and its configured CostMultiplier. Repeated Resource buildings use a 1.04 count multiplier, Crafting buildings 1.02, and Consumption buildings 1.10. Utility buildings use 1.00. Counts include stack sizes across all diagrams.",
+          "The declared maximum stack size is five. Stackable families include resources, forests, recipes, and Shops. Stacking multiplies computed Speed; it does not automatically enlarge their IO buffers or a Shop's gold capacity."
+        ]
+      },
+      {
+        "title": "Refunds and artisans",
+        "paragraphs": [
+          "Building refunds are half the previous-count purchase price plus half-price refunds for installed upgrades, with repeated upgrades accounted for by type. Copy prices include the copied stack and installed upgrades.",
+          "Artisans add 0.1 Quality, with the ordinary Artisan availability requiring forest war stage 2. Training Artisan also subtracts 0.2 Speed per copy. Resource Artisan variants apply the resource-specific extra production costs described on the resource pages."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow/FlowElement.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Flow/FlowElement.cs",
+        "line": 156
+      },
+      {
+        "path": "Assets.Source.Flow/FlowElement.cs",
+        "line": 303
+      },
+      {
+        "path": "Assets.Source.Flow/FlowUpgrade.cs",
+        "line": 44
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/Worker.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/Worker.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/Artisan.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/TrainingArtisan.cs",
+        "line": 18
+      }
+    ]
+  },
+  {
+    "id": "production-shops",
+    "title": "Shops and gold collection",
+    "category": "Production",
+    "summary": "Shops sell suitable items immediately into a local till, then require collection.",
+    "sections": [
+      {
+        "title": "What Shops accept",
+        "paragraphs": [
+          "A Shop accepts any sellable item with positive SellValue except CombatantItemType. Its one-item input is consumed whenever the till is below capacity; item sale itself has no per-item crafting timer.",
+          "Sale gold is rounded SellValue × (1 + 0.05 × Cashier count), then multiplied by 1 + Sell Value prestige when that bonus is positive. The last five sales are retained for its tooltip."
+        ]
+      },
+      {
+        "title": "Capacity and collection",
+        "paragraphs": [
+          "Base gold capacity is 10,000, increased to 50,000 with Shop Expansion. Coffers multiply that base capacity by 1 + 2 × Coffers count. A sale can take the till above its cap because capacity is checked before the whole item value is added.",
+          "Manual collection transfers the smaller of stored gold and capacity. Overflow from a very valuable sale stays in the till for another collection. A Worker collects every 10 ÷ Speed seconds; extra workers and stacks improve that collection interval.",
+          "The first Shop is free. StackSize changes computed Speed, while capacity is based on GoldCap and Coffers count rather than stack size."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 66
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 99
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 106
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 135
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Shop.cs",
+        "line": 157
+      }
+    ]
+  },
+  {
+    "id": "production-luxury-shop",
+    "title": "Luxury Shops and crown chances",
+    "category": "Production",
+    "summary": "Quality goods can produce enhanced gold income and occasional Crowns.",
+    "sections": [
+      {
+        "title": "Eligible items",
+        "paragraphs": [
+          "Luxury Shop is intrinsically automatic. It accepts positive-value, sellable noncombatants only when item Quality is strictly greater than 1. It consumes one buffered item each update and credits proceeds directly.",
+          "Gold before rounding equals item SellValue × item Quality. If Quality − 1 is strictly above 0.2, multiply that by 1.2. Sell Value prestige then multiplies it by 1 + its bonus."
+        ]
+      },
+      {
+        "title": "Crown roll",
+        "paragraphs": [
+          "Food never generates Crowns here. For other eligible goods, Quality − 1 must be strictly greater than 0.1 before any Crown roll occurs. The chance is clamp(Quality − 1, 0, 0.5). On success, Crown quantity is the integer part of the pre-rounded gold value divided by 2,400.",
+          "A successful roll can still award zero Crowns if the sale value is below one Crown's gold equivalent. The Crown check does not reduce the gold payout. Quality 1.10 or 1.20 sits on a strict threshold rather than automatically receiving the higher-tier effect."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/LuxuryShop.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/LuxuryShop.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/LuxuryShop.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Player/CurrencyExtensions.cs",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "id": "production-requisitions",
+    "title": "Requisition Offices and contracts",
+    "category": "Production",
+    "summary": "Convert selected equipment types into Requisition using base value.",
+    "sections": [
+      {
+        "title": "Contract deliveries",
+        "paragraphs": [
+          "An office selects an index from the player's shared list of contracted item types and accepts exactly that type. It adds integer(BaseValue × (1 + 0.1 × Req Cashier count)) to StoredValue for each item consumed.",
+          "The code uses item.Type.BaseValue, so item quality and added enhancement sell value do not increase delivery credit. Every 1,000 StoredValue converts into one Requisition, with the remainder retained as progress."
+        ]
+      },
+      {
+        "title": "Capacity, workers, and passive generation",
+        "paragraphs": [
+          "Stored Requisition capacity is 10 × (1 + 2 × Coffers count). Reaching capacity stops the update before passive progress and deliveries. A completion can go above capacity because generated Requisition is added as a batch.",
+          "Without a Worker, generated Requisition remains local until collected. With a Worker, new Requisition and any pending local collection are credited immediately. Installing an automatic worker also collects an existing local balance.",
+          "Each Req Passive upgrade adds 0.02 Requisition worth of stored value per one-second tick: 20 StoredValue per second at the normal 1,000 gold equivalent, or one Requisition every 50 seconds."
+        ]
+      },
+      {
+        "title": "Contract generation and reroll cost",
+        "paragraphs": [
+          "The first generated contract is randomly iron sword or iron dagger. The second is simple robe, rough vest, or softwood bow. Later candidates come from available recipe results that are EquipmentItemType; already contracted types are removed while more than one candidate remains.",
+          "Fallbacks for missing random candidates are mushroom stew for contract 3, wild staff for 4, arcanium sword for 5, and iron sword afterwards. Reroll cost spends all current Requisition if below five; otherwise it is max(5, current Requisition integer-divided by 100)."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 75
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 88
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 101
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 196
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 219
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RequisitionOffice.cs",
+        "line": 251
+      }
+    ]
+  },
+  {
+    "id": "production-mana",
+    "title": "Disenchanting and mana production",
+    "category": "Production",
+    "summary": "Equipment converts into mana, with quality and enhancement adjustments.",
+    "sections": [
+      {
+        "title": "Eligible equipment and timing",
+        "paragraphs": [
+          "A Disenchanter accepts positive-value, sellable EquipmentItemType except Food, Potion, and Scroll slots. The declared 1.04 quality constant is not used as an acceptance gate: low-quality equipment is accepted with a payout penalty.",
+          "An item takes 1 ÷ Speed seconds to process. Mana is stored locally, with no capacity check in this class. A Worker collects whenever the local balance is positive; manual collection transfers all stored Mana."
+        ]
+      },
+      {
+        "title": "Mana formula",
+        "paragraphs": [
+          "Start with SellValue and a conversion multiplier of 0.9 ÷ 11. If item Quality is below 1.04, multiply by 0.75. For equipment without any enhancement, multiply by another 0.75. If it has an Enchant enhancement, subtract half that enhancement's sell value from the value being converted.",
+          "Item ManaValue is the ceiling of adjusted value × conversion multiplier. The Disenchanter then rounds ManaValue × (1 + 0.1 × Mana Cashier count). Each Mana Passive upgrade adds three local Mana per second regardless of item supply.",
+          "An ordinary quality-1 unenhanced item receives both 0.75 penalties. Enhancements and base quality are separate tests; a Blessing or Engraving is enough to avoid the no-enhancement penalty."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Disenchanter.cs",
+        "line": 35
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Disenchanter.cs",
+        "line": 49
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Disenchanter.cs",
+        "line": 56
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Disenchanter.cs",
+        "line": 118
+      },
+      {
+        "path": "Assets.Source.Items/InventoryItem.cs",
+        "line": 27
+      }
+    ]
+  },
+  {
+    "id": "production-restaurants",
+    "title": "Restaurants, food, and Crowns",
+    "category": "Production",
+    "summary": "Meals generate Gold and probabilistic Crown income.",
+    "sections": [
+      {
+        "title": "Food sales",
+        "paragraphs": [
+          "A Restaurant accepts sellable, positive-value equipment in the Food slot. A sale starts with V = SellValue × (1 + 0.05 × Cashier count). If the food has any enhancement, V is multiplied by 1.2.",
+          "Crown score is V ÷ 2,400 × (1 + 0.1 × Restaurant Crowns count). Halve that score when the food's default recipe is missing or is not tagged Kitchen; this includes Campfire foods even when made inside a Kitchen."
+        ]
+      },
+      {
+        "title": "How Crown score resolves",
+        "paragraphs": [
+          "While the remaining score is positive, the game tests a random chance equal to that score, awarding one Crown and subtracting one on success. Scores of at least 1 therefore guarantee their whole-number portion and roll the fractional remainder.",
+          "If item Quality is strictly greater than 1.2, the gold value receives a Big Tippers multiplier of 1 + min(0.5, 0.5 × Big Tippers count × (Quality − 0.8)). This bonus is applied after the Crown score is calculated.",
+          "If at least one Crown was won, gold value is halved. The final gold amount is rounded and both rewards are stored locally. Restaurant does not read Sell Value prestige in its sale code."
+        ]
+      },
+      {
+        "title": "Collection",
+        "paragraphs": [
+          "A Worker collects both currencies every 10 ÷ Speed seconds. Manual collection also takes both balances, though the manual-availability check requires stored Gold greater than zero. There is no local storage cap in Restaurant's code."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 51
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 102
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 110
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 134
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Restaurant.cs",
+        "line": 158
+      }
+    ]
+  },
+  {
+    "id": "production-currency-exchange",
+    "title": "Currencies and the exchange",
+    "category": "Production",
+    "summary": "Gold equivalents, eligible currencies, taxes, and rounding.",
+    "sections": [
+      {
+        "title": "Gold equivalents",
+        "paragraphs": [
+          "Currencies have fixed gold equivalents used for conversion and prices: Gold 1, Requisition 1,000, Medal 600, Ring 1,200, Mana 11, Crown 2,400, Ducat 5,200, Ingenuity 200, and Faith 100.",
+          "Mana, Ingenuity, and Faith are explicitly nontradeable. The currency interface exposes exchange on tradeable non-Gold currencies after Currency Exchange technology is owned."
+        ]
+      },
+      {
+        "title": "Tax formula",
+        "paragraphs": [
+          "Base exchange tax is 1, meaning 100%. Currency Exchange Tax technology halves it to 0.5. Currency Tax Reduction prestige further multiplies tax by 1 minus its current bonus.",
+          "Buying N units costs trunc(N × gold equivalent × (1 + tax)) Gold. Selling N units receives trunc(N × gold equivalent ÷ (1 + tax)) Gold. The buy and sell formulas use opposite sides of the same multiplier, so a round trip loses value."
+        ]
+      },
+      {
+        "title": "Example and accounting",
+        "paragraphs": [
+          "At the base 100% tax, one Requisition costs 2,000 Gold to buy and sells for 500 Gold. At 50% tax it costs 1,500 and sells for 666 after truncation.",
+          "Exchange credits use isIncome = false, unlike normal production rewards. The purchase slider's maximum is floor(available Gold ÷ taxed unit price). Currency unlocks come from their associated production or progression technology."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Player/CurrencyExtensions.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Player/CurrencyExtensions.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Player/CurrencyExtensions.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 654
+      },
+      {
+        "path": "Assets.Behaviour.UI.CurrencyExchange/CurrencyExchangePopup.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Behaviour.UI.CurrencyExchange/CurrencyExchangePopup.cs",
+        "line": 85
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/CurrencyCell.cs",
+        "line": 66
+      }
+    ]
+  },
+  {
+    "id": "production-refining",
+    "title": "Refining and destruction risk",
+    "category": "Production",
+    "summary": "A Refiner trades items and optional Mana for incremental quality.",
+    "sections": [
+      {
+        "title": "Cycle and eligibility",
+        "paragraphs": [
+          "A Refiner processes a buffered item in three seconds and requires its output slot to be free before resolving. Its cycle does not use the building's Speed. Failure consumes the item permanently; success returns the same item with higher quality.",
+          "Without the appropriate Mana technology mode, combatants are rejected. With Mana mode and Refiner Demon, nonhuman combatants become eligible; Refiner Human allows all items while Mana mode is active. Refiner Mana defaults Mana use on for newly created refiners unless a copied preference overrides it."
+        ]
+      },
+      {
+        "title": "Failure and Mana formulas",
+        "paragraphs": [
+          "Without Mana, failure chance is min(max(Quality − 1, 0.25) × human factor, 0.95), where the human factor is 2 for HumanItemType and 1 otherwise. With Mana the max(...) value is divided by four before the human factor and 95% cap.",
+          "Mana cost is round(SellValue × 0.25 ÷ 11). If payment fails, the item still resolves using the non-Mana failure chance. At quality 1, ordinary items fail 25% without Mana or 6.25% with paid Mana; humans fail 50% or 12.5%."
+        ]
+      },
+      {
+        "title": "Success",
+        "paragraphs": [
+          "A successful refine adds a random 0.05 to 0.10 quality. Critical Craft technology adds an independent 1% chance to double that increase. Increasing quality rerolls base equipment stats through SetQuality.",
+          "The Refiner uses no automatic Worker check. Connecting a loop can repeatedly refine the same item, but its failure probability generally rises with quality and eventually reaches the cap."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Refiner.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Refiner.cs",
+        "line": 77
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Refiner.cs",
+        "line": 90
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Refiner.cs",
+        "line": 145
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Refiner.cs",
+        "line": 160
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 57
+      }
+    ]
+  },
+  {
+    "id": "production-enhancements",
+    "title": "Enchanting, engraving, and blessings",
+    "category": "Production",
+    "summary": "Enhancement slots, eligible inputs, and preservation of the original equipment.",
+    "sections": [
+      {
+        "title": "Slots and restrictions",
+        "paragraphs": [
+          "Enhancements are stored by EnhancementType. Before Enhance Multiple technology, any existing enhancement blocks another enhancement. After the technology, the item may receive one of each enhancement type, but cannot receive a second of the same type.",
+          "Engraver recipes distinguish heavy armor, light or medium armor, weapons, and jewelry. Enchanter recipes use filters for weapons, shields, armor, food, and other recipe-specific targets. Shrine blessings distinguish weapons from nonweapon equipment. A valid item must also pass CanEnhance for that enhancement type."
+        ]
+      },
+      {
+        "title": "Applying an enhancement",
+        "paragraphs": [
+          "An enhancement recipe returns the original item from reagent slot zero and adds an ItemEnhancementData object whose quality is the craft's rolled output quality. This preserves the item's identity and existing data.",
+          "For enhancements with AddQuality, the base item receives that fixed bonus plus a random value between (enhancement quality − 1)/2 and enhancement quality − 1. The item-quality enchant also adds Dark Essence Quality prestige to the fixed increase.",
+          "Enhancement result recipes disable bonus productivity progress, even though Overseer may be available in their upgrade list. New material recipes at the same stations still use their own recipe's normal productivity rules."
+        ]
+      },
+      {
+        "title": "Value and equipment",
+        "paragraphs": [
+          "Equipment SellValue is its normal rounded base value × quality plus every enhancement's sell value. Enhancement stats are added to the equipment's base rolled stats. Filling all enhancement slots triggers the Full Enhance achievement."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 44
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 105
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 131
+      },
+      {
+        "path": "Assets.Source.Items/CraftingResult.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 166
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Engraver.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Enchanter.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "id": "production-routing",
+    "title": "Collectors, Distributors, and Manifolds",
+    "category": "Production",
+    "summary": "Different merging and splitting tools have different priority behavior.",
+    "sections": [
+      {
+        "title": "Collector",
+        "paragraphs": [
+          "Collector begins with two inputs and one output, each buffered for one item. If the output has room, it tries the current input; after a transfer or an empty attempt it advances to the next connected input.",
+          "It skips disconnected inputs when advancing, but tries only the selected input in a single update. An empty selected input therefore costs an update before another input is tried. Additional inputs can be added; collapse removes only disconnected trailing slots while keeping at least two."
+        ]
+      },
+      {
+        "title": "Distributor",
+        "paragraphs": [
+          "Distributor begins with one input and two outputs. It sends one item to the current output and advances to the next connected output. If the selected output is full, it advances and returns for that update.",
+          "Distributor skips disconnected outputs when advancing, but does not inspect the downstream item's filter before placing an item into an output buffer. An incompatible item can thus occupy that branch and stall it. Additional outputs are supported; collapse retains at least two."
+        ]
+      },
+      {
+        "title": "Manifold",
+        "paragraphs": [
+          "Manifold has matching numbers of inputs and outputs, starting at two each. It scans inputs from the first slot and outputs from the first slot, sending one waiting item to the first connected output with buffer space, then returns.",
+          "Unlike the rotating Collector and Distributor, this is fixed input and output priority. A continuously supplied early input can take precedence over later inputs. Downstream compatibility is handled by pipes after the transfer, so filters still matter."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Collector.cs",
+        "line": 88
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Collector.cs",
+        "line": 107
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Distributor.cs",
+        "line": 95
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Distributor.cs",
+        "line": 112
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Manifold.cs",
+        "line": 90
+      }
+    ]
+  },
+  {
+    "id": "production-filters",
+    "title": "Filters, Appraisers, Inspectors, and Accountants",
+    "category": "Production",
+    "summary": "Sort by type, statistics, or the kingdom's current currency balance.",
+    "sections": [
+      {
+        "title": "Filter",
+        "paragraphs": [
+          "Filter has one generic input and two outputs. An exact match to the chosen ItemType goes to output zero; everything else goes to output one. Only the matching route's capacity is checked, so a blocked selected branch stalls that item instead of falling back.",
+          "With no chosen type, ordinary input items all go to the nonmatching output. Setting the filter also gives the first output that item's preview type."
+        ]
+      },
+      {
+        "title": "Appraiser",
+        "paragraphs": [
+          "Appraiser evaluates one selected AppraiserStat and a threshold with Equal, Not Equal, Less Than, Less Than or Equal, Greater Than, or Greater Than or Equal. Passing items go to the first output; failures to the second.",
+          "With no selected stat every item passes. Ordinary items report Quality and Training as round(Quality × 100), and zero for unsupported statistics; specialized item types can override the statistic calculation."
+        ]
+      },
+      {
+        "title": "Accountant",
+        "paragraphs": [
+          "Accountant releases an item only when its currency comparison passes. It supports the same six comparison operators. It does not charge or reserve the tested currency, so the condition is a gate based on the player's current balance.",
+          "Gold balances are integer-divided by 10,000 before comparison. The threshold therefore uses groups of 10,000 Gold. With no selected currency, items pass freely."
+        ]
+      },
+      {
+        "title": "Inspector",
+        "paragraphs": [
+          "Inspector passes the actual inventory item onward, stores a clone as LastItem for inspection, and keeps a LiveItem reference to the actual object. It does not modify the item's quality or equipment. All these tools use one-item buffers and require their relevant output to have space."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Filter.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Filter.cs",
+        "line": 61
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Appraiser.cs",
+        "line": 57
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Appraiser.cs",
+        "line": 70
+      },
+      {
+        "path": "Assets.Source.Items/ItemType.cs",
+        "line": 297
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Accountant.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Accountant.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Inspector.cs",
+        "line": 42
+      }
+    ]
+  },
+  {
+    "id": "production-stockpiles",
+    "title": "Stockpiles and overflow",
+    "category": "Production",
+    "summary": "Local first-in, first-out storage smooths variable production.",
+    "sections": [
+      {
+        "title": "Storage and output",
+        "paragraphs": [
+          "A Stockpile has a one-item input, one-item main output, and an internal FIFO list with default capacity 10. Each update it accepts one input item if the internal list has room, then moves the oldest stored item into the main output if that output has room.",
+          "The input and output buffers are outside the internal Contents count. Consequently a full ten-item internal list is not the entire number of items the node can hold. Mixed item types are allowed and retain insertion order."
+        ]
+      },
+      {
+        "title": "Overflow behavior",
+        "paragraphs": [
+          "Stockpile Overflow adds a second output. When that output is connected and free, an input item is waiting, and the internal list is at least capacity, the node sends the oldest stored item to overflow first. It then admits the waiting input item.",
+          "Overflow therefore releases an older stored item, not the newest arriving item. A full stockpile with no incoming item does not automatically drain through overflow. Main output continues to use the oldest remaining item."
+        ]
+      },
+      {
+        "title": "Capacity controls",
+        "paragraphs": [
+          "Stockpile Capacity technology enables the capacity slider. Adjusting it changes the internal Capacity integer; the value is copied and saved. Reducing the capacity does not immediately delete existing Contents."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Stockpile.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Stockpile.cs",
+        "line": 59
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Stockpile.cs",
+        "line": 76
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Stockpile.cs",
+        "line": 94
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowStockpile.cs",
+        "line": 75
+      }
+    ]
+  },
+  {
+    "id": "production-global-storage",
+    "title": "Armories and shared item storage",
+    "category": "Production",
+    "summary": "Storage terminals share inventories by item type and channel across diagrams.",
+    "sections": [
+      {
+        "title": "Input and output terminals",
+        "paragraphs": [
+          "An Armory terminal configured without OutputType accepts compatible incoming items into the player's shared ArmoryContents. A terminal configured with an OutputType requests that item type from shared storage and buffers it for its pipe.",
+          "Stored inventory is indexed by channel and exact ItemType, with eight channels. Capacity checks apply to a particular item type in a channel rather than to a building's total inventory. Multiple terminals on that channel access the same pool across diagrams."
+        ]
+      },
+      {
+        "title": "Costs and dispatch",
+        "paragraphs": [
+          "Armory-family input costs are paid when items enter storage. Ordinary base input cost is 100 Gold, reduced to half by Armory Storage Cost technology. Guildhouse uses a base of 200 Gold; Hoard uses zero.",
+          "Stored items are retrieved in FIFO order. Empty output terminals join a waiting queue; an incoming item can be delivered directly into the earliest queued output. Empty requesters briefly wait 0.2 seconds before polling again.",
+          "With Armory Overflow technology, an input terminal can pass its waiting item to a connected overflow output when that item's shared capacity is full. Insufficient input fee alone does not trigger overflow because the overflow condition specifically tests storage capacity."
+        ]
+      },
+      {
+        "title": "Storage families",
+        "paragraphs": [
+          "Armory accepts weapons, headgear, and chest armor, with capacity 10 per type and channel. Pantry accepts Food and Potions and keeps capacity 10. Library accepts Scrolls with capacity 5. Treasury accepts Rings, Amulets, and Trinkets with capacity 5.",
+          "Guildhouse accepts Adventurers, or all HumanItemType after Guildhouse Conscripts, with capacity 5. Hoard accepts dungeon-sourced items and noncombatant quest-sourced items with capacity 80, has no input fee, and has no channel-unlock technology requirement."
+        ]
+      },
+      {
+        "title": "Editing terminals",
+        "paragraphs": [
+          "Opening the relevant storage popup pauses that specific terminal's processing. When an output terminal changes selected item type, any mismatched item already in its output is returned to shared storage."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Armory.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Armory.cs",
+        "line": 109
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Armory.cs",
+        "line": 122
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Armory.cs",
+        "line": 171
+      },
+      {
+        "path": "Assets.Source.Items/ArmoryContents.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items/ArmoryContents.cs",
+        "line": 54
+      },
+      {
+        "path": "Assets.Source.Items/ArmoryContents.cs",
+        "line": 87
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Pantry.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Library.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Treasury.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Guildhouse.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Hoard.cs",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "id": "production-portals",
+    "title": "Portals and shared channels",
+    "category": "Production",
+    "summary": "Move arbitrary items between diagrams using Mana-funded storage lanes.",
+    "sections": [
+      {
+        "title": "Channel storage",
+        "paragraphs": [
+          "Portals use a shared inventory indexed by eight channels and eight channel indices, giving 64 separate lanes. Each lane holds up to 20 items in FIFO order and can contain mixed item types.",
+          "A Portal is either an input terminal or an output terminal. Input accepts any item if its one-item buffer is free, then pays Mana to store it in the selected lane. Output requests and forwards the oldest item in that lane."
+        ]
+      },
+      {
+        "title": "Fees and overflow",
+        "paragraphs": [
+          "The base input fee is 12 Mana per item, reduced to 6 by Portal Cost Reduce and to 3 by Portal Cost Reduce 2. The fee is charged once on entry; the output has no additional fee.",
+          "Portal Overflow gives an input a passthrough output. It forwards the waiting item only when the selected lane is full and the overflow output is connected and free. Running out of Mana does not by itself qualify for overflow."
+        ]
+      },
+      {
+        "title": "Waiting outputs and settings",
+        "paragraphs": [
+          "Empty output terminals join a waiting queue. A newly stored item can be handed directly to the first queued output rather than remaining in the lane's list. Empty polling uses a 0.2-second timeout.",
+          "The terminal pauses while its settings popup is active. Changing between input and output clears the previous IO layout. Channel, channel index, direction, and last displayed item are saved."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Portal.cs",
+        "line": 37
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Portal.cs",
+        "line": 80
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Portal.cs",
+        "line": 147
+      },
+      {
+        "path": "Assets.Source.Items/PortalContents.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items/PortalContents.cs",
+        "line": 39
+      },
+      {
+        "path": "Assets.Source.Items/PortalContents.cs",
+        "line": 65
+      }
+    ]
+  },
+  {
+    "id": "production-gates",
+    "title": "Track switches, timers, and release buttons",
+    "category": "Production",
+    "summary": "Control when individual items enter a chain.",
+    "sections": [
+      {
+        "title": "Track Switch",
+        "paragraphs": [
+          "With SwitchPosition true, Track Switch passes its waiting item to the first output when there is room. With the switch false, it stops the item unless Track Switch 2 has added a second output and that second output is connected and free.",
+          "A full selected route causes a stall; the node does not automatically use the other route. Switch position is copied and saved."
+        ]
+      },
+      {
+        "title": "Timer",
+        "paragraphs": [
+          "Timer starts with a two-second interval and a two-second countdown. It counts down even when no item is present. Once the countdown has expired and its output is free, it forwards one waiting item and resets the countdown.",
+          "It therefore enforces spacing between successful releases rather than imposing a fresh delay starting at each arrival. An item arriving after a long idle can pass immediately. Timer processing does not use Speed or Worker.",
+          "The timer settings popup is gated by Outfitter Timeout technology. Its slider sets MaxTime and resets TimeLeft to the same value."
+        ]
+      },
+      {
+        "title": "Single Button",
+        "paragraphs": [
+          "Single Button spends one queued click only when it successfully transfers an input item to its output. Clicking can queue up to ten releases through the interface. Unused clicks persist when no input is available or output is blocked."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/TrackSwitch.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrackSwitch.cs",
+        "line": 54
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Timer.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Timer.cs",
+        "line": 39
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowTimer.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/SingleButton.cs",
+        "line": 37
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowSingleButton.cs",
+        "line": 96
+      }
+    ]
+  },
+  {
+    "id": "production-outfitters",
+    "title": "Outfitters and equipment automation",
+    "category": "Production",
+    "summary": "Pair humans with compatible equipment and return the equipped character.",
+    "sections": [
+      {
+        "title": "Inputs and fitting",
+        "paragraphs": [
+          "An Outfitter takes one HumanItemType and one EquipmentItemType. Its input filters check equipment compatibility against the other waiting input when present. Outfitter Skip Replace technology influences whether occupied slots may be replaced.",
+          "When both inputs are present, the node examines conflicting equipment. If any conflicting equipped item has the exact same item type as the incoming equipment, it forwards the human unchanged and keeps the incoming equipment available for another character.",
+          "Otherwise it consumes both into CurrentHuman and CurrentEquip and calls AddEquipment on the human. Completion returns that human after progress reaches 1 at Speed progress per second."
+        ]
+      },
+      {
+        "title": "Manual approval and automation",
+        "paragraphs": [
+          "Without Outfitter Automation, an unqueued fitting stops at 80% progress until manually released by its interface. Automation allows it to continue past that point without the queued release.",
+          "This setting is a separate technology check, not the generic Worker-derived CanAutoCraft. Output space is required before any fitting work proceeds."
+        ]
+      },
+      {
+        "title": "Timeout",
+        "paragraphs": [
+          "When a human is waiting without equipment and Timeout is greater than zero, the Outfitter accumulates a timeout and forwards the unchanged human after it is exceeded. The timeout resets when a fitting begins or neither relevant wait condition applies.",
+          "Timeout value is copied and saved. Routing humans with incompatible equipment can reject the pipe, so mixed equipment lines benefit from filtering by slot or character eligibility."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Outfitter.cs",
+        "line": 35
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Outfitter.cs",
+        "line": 72
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Outfitter.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Outfitter.cs",
+        "line": 97
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Outfitter.cs",
+        "line": 156
+      }
+    ]
+  },
+  {
+    "id": "production-inn",
+    "title": "Inns, healing, and food",
+    "category": "Production",
+    "summary": "Five guests can heal automatically, with optional food accelerating their stay.",
+    "sections": [
+      {
+        "title": "Guests and timing",
+        "paragraphs": [
+          "Inn is intrinsically automatic and contains five guest slots. Its human input and output each buffer five items. A stay normally has 20 ticks, and all guests advance on a shared two-second timer.",
+          "Each tick restores 0.05 Health01, clamped to full health, and removes one remaining tick. A full stay can therefore restore 100% of maximum health. This class does not use Speed to shorten its two-second timer."
+        ]
+      },
+      {
+        "title": "Food",
+        "paragraphs": [
+          "Inn Add Food enables a second input that accepts Food-slot equipment. A waiting food item is assigned to the first occupied guest slot without food.",
+          "With food, each shared tick removes a second remaining tick and restores another 0.05 Health01, halving a complete stay to about ten ticks. It also restores 5 × food Quality energy per tick; an enhanced food item doubles this to 10 × quality.",
+          "Without food, InnSlot's actual Tick method restores health but does not restore energy. The class has an EnergyPerTick field, but that field is not used in this implementation."
+        ]
+      },
+      {
+        "title": "Income and output",
+        "paragraphs": [
+          "Admitting a character below 90% health awards 200 Gold. Assigning food awards round(food SellValue × 0.5) Gold. These payments are credited directly as income.",
+          "Finished guests wait for output space, with at most one guest moved to output per update. The class contains a manual-action method that attempts an extra tick on each occupied slot with a 50% chance per guest, but its intrinsically automatic state means the generic craft button is hidden."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Inn.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Inn.cs",
+        "line": 87
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Inn.cs",
+        "line": 105
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/InnSlot.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Inn.cs",
+        "line": 55
+      }
+    ]
+  },
+  {
+    "id": "production-recruitment",
+    "title": "Barracks, Adventurers Guilds, and mercenaries",
+    "category": "Production",
+    "summary": "Recruit quality, quotas, war gates, and character sale payouts.",
+    "sections": [
+      {
+        "title": "Recruiting",
+        "paragraphs": [
+          "Barracks produces resources tagged Barracks at a base rate of 0.5 × Speed. Adventurers Guild produces Guild-tagged resources at 0.5 × Speed, but remains blocked until forest war stage 4, checked approximately once per second.",
+          "These are resource producers: recruit availability and global quota, per-order payment, worker automation, five-item output buffer, and productivity work as for other resources. Each Recruit Artisan adds 0.1 building Quality and adds 200% of recruit resource value in Gold to each paid order.",
+          "Human Quality prestige is added to the quality roll before a new recruit initializes its character data."
+        ]
+      },
+      {
+        "title": "Mercenary Guild eligibility",
+        "paragraphs": [
+          "Mercenary Guild is intrinsically automatic. It accepts sellable Adventurers with positive SellValue and Quality strictly above 1. Mercenary Conscripts expands eligibility to other HumanItemType characters.",
+          "Characters are consumed when sold. The sale pays Gold equal to integer SellValue ÷ 2, plus a Ducat award based on that same halved gold value."
+        ]
+      },
+      {
+        "title": "Ducat formula",
+        "paragraphs": [
+          "Let D = halved sale value ÷ 5,200. If D is below 1, award one Ducat with probability D. If D is at least 1, award integer(D), discarding the fractional remainder. Gold and Ducats are credited immediately, and the last five transactions are retained for inspection. Human SellValue includes the sell values of currently equipped items, so equipment contributes to both payouts."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Barracks.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/AdventurersGuild.cs",
+        "line": 22
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/AdventurersGuild.cs",
+        "line": 35
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/ResourceElement.cs",
+        "line": 121
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/MercenaryGuild.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/MercenaryGuild.cs",
+        "line": 46
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/MercenaryGuild.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Items.Type/HumanItemType.cs",
+        "line": 109
+      }
+    ]
+  },
+  {
+    "id": "production-training",
+    "title": "Training Grounds and diminishing returns",
+    "category": "Production",
+    "summary": "Ten training ticks improve humans while consuming energy.",
+    "sections": [
+      {
+        "title": "Training cycle",
+        "paragraphs": [
+          "Training Grounds accepts HumanItemType. With a Worker, it ticks on a shared timer every 2 ÷ Speed seconds. Each admitted character begins with ten ticks remaining. A manual click independently gives each occupied slot a 50% chance of one additional tick.",
+          "Each training tick passes Parent.QualityPerTick × building Quality × repetition factor to AddTraining. QualityPerTick is 0.02 without a training dummy and 0.04 with one. AddTraining first applies trait modifiers, then actually increases item quality by a random amount between half and the full modified parameter; the upper endpoint is excluded."
+        ]
+      },
+      {
+        "title": "Repeating training",
+        "paragraphs": [
+          "Adventurers always use repetition factor 1. Other humans use 1 on their first training visit, 0.5 on their second, and 0 afterwards. Completing a stay calls ActivityCompleted and increments TrainingCount for Adventurers, or for other humans while TrainingCount is below 3.",
+          "Energy lost per tick is 2 × (1 + TrainingCount), halved when the food technology is in use and the character has equipped food. Exhausted characters are removed from the training contents instead of output.",
+          "Training Grounds Food makes automatic ticks perform a second tick for a character with food, and equipped food is consumed when the stay completes. Specialization technology checks eligible TrainingGrounds advancements at the halfway tick if the character has not exhausted."
+        ]
+      },
+      {
+        "title": "Dummy and capacity caveat",
+        "paragraphs": [
+          "Training Grounds Dummy adds an input for nonhuman combatants. A dummy doubles base training gain; trainees that still have positive repetition factor damage it by base damage ÷ 10 each tick. A dead dummy is removed.",
+          "The displayed Capacity property is three plus two possible slot technologies. However, GetFreeSlot scans the entire five-element Contents array rather than checking Capacity. This implementation can admit characters into backing slots beyond the displayed capacity; the distinction is relevant when comparing observed behavior with the menu.",
+          "Boot Camp has a 10% chance to award one Medal when an exactly quality-1 conscript enters."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 133
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 151
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 165
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGroundsSlot.cs",
+        "line": 41
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 340
+      }
+    ]
+  },
+  {
+    "id": "production-arena",
+    "title": "Arena battles, training, and rewards",
+    "category": "Production",
+    "summary": "The Arena trains combatants and converts completed bouts into currency.",
+    "sections": [
+      {
+        "title": "Entry and combat",
+        "paragraphs": [
+          "Arena accepts any CombatantItemType in each of two one-item inputs. Eastern war stage 4 must be reached before its update processes entrants. A Worker starts fights automatically; otherwise a bout can be started manually once both slots are filled.",
+          "At the start, RewardMultiplier is the product of both combatants' Health01. Each unarmed HumanItemData halves it. Ticks occur every 2 ÷ Speed seconds. Both combatants take simultaneous random damage based on one tenth of the opponent's base damage, with a range from that amount ÷ 1.2 through × 1.2.",
+          "Normal bouts stop when a human is below 10% health or a nonhuman is dead. A dead human at the normal stop check is healed by a small random amount. Blood Sport instead continues until a death; if both are dead the code randomly heals one."
+        ]
+      },
+      {
+        "title": "Training is limited, combat is not",
+        "paragraphs": [
+          "Only the first ten active fight ticks train the slots and cost the normal training energy. After the ten training ticks, combat damage continues until the health/death stop condition is met.",
+          "The AddTraining parameter per tick is 0.04, or 0.06 in Blood Sport with two nonhumans, or 0.08 when Blood Sport includes a human. AddTraining applies trait modifiers and actually increases quality by a random amount from half to the full modified parameter. Training is granted only to Adventurers or humans with ArenaCount zero. Energy cost starts at 3 per training tick and scales with 1 + ArenaCount for the eligible humans.",
+          "Output eligibility requires a living, nonexhausted human that is an Adventurer or has never completed Arena before. Eligible humans receive ActivityCompleted and an ArenaCount increase. Nonhumans are not output. Nonadventurer humans after their first Arena visit are also not output. Applicable Arena or ArenaWin advancements are then tested."
+        ]
+      },
+      {
+        "title": "Reward formula",
+        "paragraphs": [
+          "Multiply the starting RewardMultiplier by 1 + 0.1 × Arena Cashier count. For each participant multiply by 1.2 if it is an Adventurer, or 1.1 for other humans. In Blood Sport, multiply by another 1.25 only when the resulting multiplier is above 1.",
+          "Currency selection checks sequential thresholds: above 1.5, a 25% Ducat roll; otherwise above 1.25, a 25% Ring roll; otherwise above 1.09, a 25% Crown roll; otherwise Gold. A failed earlier roll can still reach a later eligible currency roll.",
+          "Payout is round(10,000 × final multiplier ÷ chosen currency's gold equivalent). Required eligible output slots must have room before completion. Both slots then clear and the Arena waits a four-second cooldown."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 135
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 155
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 162
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 238
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 260
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 299
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 339
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 355
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 340
+      }
+    ]
+  },
+  {
+    "id": "production-shrine-faith",
+    "title": "Shrines, prayer, and Faith",
+    "category": "Production",
+    "summary": "Clerics generate Faith, gain training, and lose increasing energy.",
+    "sections": [
+      {
+        "title": "Prayer inputs and rewards",
+        "paragraphs": [
+          "Prayer recipes accept any HumanItemType whose Archetype is Cleric. Prayer 1 uses that cleric alone, has a threefold crafting-time multiplier, grants 0.1 training through AddTraining, and produces Faith from a base amount of 27.",
+          "Prayer 2 also consumes blessed prayer beads, has a sixfold crafting-time multiplier, grants 0.3 training, and produces Faith from a base amount of 214. Both suppress productivity with BaseProductivity −999."
+        ]
+      },
+      {
+        "title": "Cleric fatigue and Wisdom",
+        "paragraphs": [
+          "On returning the cleric, OutputCleric(addQL) passes addQL to AddTraining, then costs addQL × 250 × (1 + SpecialCount) energy and increments SpecialCount. AddTraining applies trait modifiers and increases actual item quality by a random amount from half to the full modified training parameter. If the cleric is exhausted it is not returned to the output.",
+          "Faith is round(base Faith × craft output quality × max(1, cleric Wisdom ÷ 350)). Wisdom below 350 does not reduce the base reward, while higher Wisdom scales it upward. Faith is credited directly during recipe completion."
+        ]
+      },
+      {
+        "title": "Other Shrine work",
+        "paragraphs": [
+          "The Shrine spends Faith on blessed prayer beads, indulgence, weapon or equipment blessings, pontiff ring, martyr relic, class transformations, purified technology, upgraded weapons, and cleansed nightmare.",
+          "Blessed Arms costs 195 Faith and accepts a weapon that can receive a Blessing; Blessed Equipment costs 145 Faith and accepts nonweapon equipment eligible for a Blessing. Prayer beads cost 84 Faith, indulgence 101, pontiff ring 565, and martyr relic 305 in addition to their listed material inputs.",
+          "Purified Tech costs 23 Faith and converts heretic tech with a 10% purified-tech result and 90% return-heretic-tech result. It also suppresses productivity. Cleansed Nightmare costs 1,298 Faith and one reconstructed nightmare."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Shrine.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 17
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 46
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 77
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 185
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 354
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 370
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 385
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 340
+      }
+    ]
+  },
+  {
+    "id": "production-graveyards",
+    "title": "Graveyards and burial services",
+    "category": "Production",
+    "summary": "Burials turn human remains into buried remains and may generate Faith.",
+    "sections": [
+      {
+        "title": "Burial recipes",
+        "paragraphs": [
+          "Simple Burial consumes one human remains and one coffin. It uses a threefold time multiplier and outputs buried remains at the craft's rolled quality.",
+          "Officiated Burial adds a cleric-archetype human, uses a sixfold time multiplier, returns that cleric with 0.15 training and the shared prayer energy cost, and generates Faith from a base of 100.",
+          "State Funeral consumes human remains, a gilded coffin, and a cleric plus 15 Crowns. It uses a tenfold time multiplier, adds 0.2 to the buried remains' craft quality, trains the cleric by 0.3, and produces Faith from a base of 290."
+        ]
+      },
+      {
+        "title": "Special outputs",
+        "paragraphs": [
+          "All three burial recipes set BaseProductivity to −999. Their buried-remains creator only returns an item when the first output buffer currently contains fewer than three items; otherwise that particular result is null.",
+          "Because buried-remains output is a custom result rather than a fixed item result, this limit is checked at completion separately from the recipe building's general output-capacity test. Plan a downstream sink for buried remains when using funerals primarily for Faith."
+        ]
+      },
+      {
+        "title": "Clerics and Faith",
+        "paragraphs": [
+          "Officiating uses Shrine.OutputCleric and Shrine.OutputFaith. Clerics gain escalating SpecialCount energy costs, and exhausted clerics disappear instead of returning. Faith scales with rolled craft quality and max(1, Wisdom ÷ 350), then is rounded and credited directly."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Graveyard.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Graveyard.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Graveyard.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Graveyard.cs",
+        "line": 47
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Graveyard.cs",
+        "line": 73
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 370
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Shrine.cs",
+        "line": 385
+      }
+    ]
+  },
+  {
+    "id": "production-summoning-necromancy",
+    "title": "Summoning and necromancy",
+    "category": "Production",
+    "summary": "Mana and Faith recipes create combatants or transform existing adventurers.",
+    "sections": [
+      {
+        "title": "Summoning Circle",
+        "paragraphs": [
+          "Summon Gremlin spends 320 Mana with no item reagents. Summon Hellspawn spends 680 Mana and a gem topaz. Summon Observer spends 390 Mana and an observer eye. These summoning recipes use a crafting-time multiplier of 8.",
+          "Faith summons are Cherub for 124 Faith with no item reagents, Valkyrie for 290 Faith plus gold armor, and Arbiter for 475 Faith plus an arcanium greatsword, also at an eightfold time multiplier."
+        ]
+      },
+      {
+        "title": "Necromancer",
+        "paragraphs": [
+          "Necromancer consumes buried remains to create undead. Shambler costs one buried remains and 460 Mana. Skeletal Archer adds a softwood bow and costs 520 Mana. Skeletal Berserker adds an arcanium ingot and costs 550 Mana. Skeletal Mage adds a gem ruby and costs 990 Mana.",
+          "Hulking Monstrosity consumes three buried remains and enchanted cotton thread plus 2,480 Mana. All five undead creation recipes use an eightfold crafting-time multiplier."
+        ]
+      },
+      {
+        "title": "Class transformations",
+        "paragraphs": [
+          "Demonologist uses a Warlock, blank tome, and gremlin at the Summoning Circle. Necrolyte uses a Warlock, blank tome, and buried remains at the Necromancer. These recipes use a fourfold crafting-time multiplier and BaseProductivity −999.",
+          "TransformAdventurer changes the existing human item's type and adds 0.05 training through AddTraining. It preserves the existing item and its character data instead of creating a new independently generated recruit."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Recipes/SummoningCircle.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/SummoningCircle.cs",
+        "line": 52
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/SummoningCircle.cs",
+        "line": 66
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Necromancer.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Necromancer.cs",
+        "line": 73
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Necromancer.cs",
+        "line": 89
+      },
+      {
+        "path": "Assets.Source.Items/CraftingResult.cs",
+        "line": 90
+      }
+    ]
+  },
+  {
+    "id": "production-inventor",
+    "title": "Inventors, experiments, and Ingenuity",
+    "category": "Production",
+    "summary": "The Inventor converts materials into parts, research currency, and advanced equipment.",
+    "sections": [
+      {
+        "title": "Tinkering and directed production",
+        "paragraphs": [
+          "Tinker consumes one arcanium ingot, one crystal mana, and one attuned catalyst. With its twofold time multiplier, its default craft time is six seconds. It chooses one Widget, Gizmo, or Doodad with equal configured weights of 0.3333 and gives a base reward of 12 Ingenuity.",
+          "Direct part recipes have no item reagents and cost 28 Ingenuity for Widget, 22 for Gizmo, or 26 for Doodad. Their default craft time is 1.5 seconds before building Speed. Completing the Widget recipe triggers Widget Inc."
+        ]
+      },
+      {
+        "title": "Experiments",
+        "paragraphs": [
+          "Mechanical Experiment consumes a widget and two iron ingots for a base reward of 16 Ingenuity. Alchemical Experiment consumes a gizmo and soothing herbs for 14. Biological Experiment consumes a doodad and stalker eye for 16.",
+          "Experiments have no item outputs. Currency rewards follow the normal recipe completion formula: reward base × rolled output quality, rounded. They can therefore operate without an item-output pipe."
+        ]
+      },
+      {
+        "title": "Advanced material and equipment chain",
+        "paragraphs": [
+          "Inventor combines arcanium ingot and widget into tinkersteel, embroidered cotton and gizmo into witchcloth, and embossed leather and doodad into primal leather. Petrified wood uses resin, attuned catalyst, ancient wood plank, and 4 Ingenuity.",
+          "Further recipes spend Ingenuity on winged boots, golem gauntlets, goggles, chainsaw, shield arm, and triune shield. Nightmare Collector consumes nightmare casing, cleansed nightmare, and two decoded writings plus 257 Ingenuity, with a fivefold time multiplier."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Inventor.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Inventor.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Inventor.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Inventor.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Inventor.cs",
+        "line": 99
+      },
+      {
+        "path": "Assets.Source.Items.Recipes/Inventor.cs",
+        "line": 251
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/RecipeElement.cs",
+        "line": 245
+      }
+    ]
+  },
+  {
+    "id": "production-disposal-nightmare",
+    "title": "Incineration and nightmare distillation",
+    "category": "Production",
+    "summary": "Special sinks remove surplus items or advance global nightmare progress.",
+    "sections": [
+      {
+        "title": "Incinerator",
+        "paragraphs": [
+          "Incinerator accepts every item type except HumanItemType. Each update it consumes its waiting item and records it as LastItem. It produces no output or currency.",
+          "Combatant is broader than HumanItemType: nonhuman combatants pass its filter. Human remains are item types rather than living human characters, so eligibility follows the concrete type test."
+        ]
+      },
+      {
+        "title": "Nightmare Distiller",
+        "paragraphs": [
+          "The building class is NightmareCollector, but its displayed label is Nightmare Distiller. It accepts the nightmare_collector item and has no craft button.",
+          "While global NightmareProgress is below 1, it consumes one collector and adds 1 ÷ floor(square root of NightmareCount) to that global progress. Values above 0.985 but still below 1 are snapped to 1. It does not consume collectors once progress is already at least 1.",
+          "The node reads and writes the player's shared progress rather than keeping a separate pool per building. Its formula has no explicit zero-count guard in this class, so the progression system's current NightmareCount is part of interpreting the requirement."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Incinerator.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Incinerator.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/NightmareCollector.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/NightmareCollector.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/NightmareCollector.cs",
+        "line": 35
+      }
+    ]
+  }
+]

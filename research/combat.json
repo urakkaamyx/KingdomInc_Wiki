@@ -1,0 +1,2702 @@
+[
+  {
+    "id": "combat-stats",
+    "title": "Combat stats and power",
+    "category": "Adventure",
+    "summary": "How rolled stats, equipment, quality, class multipliers, and damage traits combine.",
+    "sections": [
+      {
+        "title": "Eight stats",
+        "paragraphs": [
+          "Health is damage capacity, Armor reduces ordinary incoming damage, Strength/Dexterity/Magic/Wisdom supply class power and skill checks, Energy limits adventurer activity, and Combat Power is a separate bonus added to a human’s main combat stat.",
+          "An unclassed human uses the highest of Strength, Dexterity, and Magic; ties favor Strength, then Dexterity. A class with an assigned PowerStat uses that instead, including Wisdom for cleric classes.",
+          "Human power = round((main stat + Combat Power bonus) × class multiplier × exhaustion multiplier). At zero energy, a human with an energy pool uses an exhaustion multiplier of 0.75. A nonhuman combatant instead uses round(Combat Power stat × its type multiplier). Base damage = round(power × active damage-trait multiplier). Activities then apply their own damage scaling and random rolls."
+        ]
+      },
+      {
+        "title": "Rolls and quality",
+        "paragraphs": [
+          "Initial combatant stats range from floor(0.75 × declared base) through ceil(1.333 × base), using rounded interpolation. Energy has a fixed declared base. The basic Adventurer has base 100 Health, 100 Energy, and 40 Strength, Dexterity, Magic, and Wisdom.",
+          "For human stats, add stored base and all equipment contributions, apply active stat traits, then multiply by human quality and round. Energy is rounded without human-quality multiplication. A human with zero stored base Energy remains without an energy pool even if equipment supplies Energy. Health also receives the Human Health prestige multiplier before quality.",
+          "Equipment has independent quality and rolls. Its final stats are added before the wearer-quality multiplier, so both can compound. Health and energy are stored as fractions; changing the maximum retains the fraction."
+        ]
+      },
+      {
+        "title": "Class power multipliers",
+        "paragraphs": [
+          "These declared values precede damage traits."
+        ],
+        "table": {
+          "headers": [
+            "Class family",
+            "Main stat",
+            "Power multiplier"
+          ],
+          "rows": [
+            [
+              "Fighter / Rogue / Mage",
+              "Strength / Dexterity / Magic",
+              "1.25"
+            ],
+            [
+              "Guardian, Battlemaster / Thief, Ranger / Elementalist, Warlock",
+              "Archetype stat",
+              "1.5"
+            ],
+            [
+              "Final Fighter, Rogue, Mage specializations",
+              "Archetype stat",
+              "2.0"
+            ],
+            [
+              "Cleric",
+              "Wisdom",
+              "0.75"
+            ],
+            [
+              "Ritualist / Priest",
+              "Wisdom",
+              "1.15"
+            ],
+            [
+              "Shaman / Inquisitor / Evangelist / Lightbringer",
+              "Wisdom",
+              "1.3"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Critical damage",
+        "paragraphs": [
+          "Critical Hit rolls a 5% × active trait quality chance whenever its damage multiplier is evaluated. A success doubles the current damage multiplier. Multiple sources of this same trait keep only the highest-quality active source. The weapon critical enchantment supplies this trait."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 75
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 223
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 209
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 244
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 254
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 528
+      }
+    ]
+  },
+  {
+    "id": "armor-and-damage",
+    "title": "Armor and damage reduction",
+    "category": "Adventure",
+    "summary": "The exact armor curve, unarmored penalty, and damage-processing order.",
+    "sections": [
+      {
+        "title": "Armor curve",
+        "paragraphs": [
+          "For Armor A ≤ 200, ordinary incoming damage is multiplied by 0.5^(A/200). Above 200, first replace A with 200 + (A − 200)^0.8, then apply that exponential. This gives diminishing returns beyond 200.",
+          "Exactly zero Armor adds an extra ×2 penalty. Armor-ignoring attacks skip both the curve and zero-armor penalty. Active damage-taken traits apply afterward; the result is rounded and subtracted from health. An incoming value of exactly zero returns immediately."
+        ],
+        "table": {
+          "headers": [
+            "Armor",
+            "Incoming ordinary damage before traits"
+          ],
+          "rows": [
+            [
+              "0",
+              "200%"
+            ],
+            [
+              "100",
+              "about 70.71%"
+            ],
+            [
+              "200",
+              "50%"
+            ],
+            [
+              "400",
+              "about 39.32%"
+            ],
+            [
+              "800",
+              "about 28.04%"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Roles and category",
+        "paragraphs": [
+          "Tank multiplies damage taken by 0.75. Guardian with a Shield divides it by 1 + 0.1 × trait quality. These apply after armor and also protect against armor-ignoring attacks.",
+          "Armor category is distinct from the numerical Armor stat. Light, Medium, and Heavy tags affect advancement and certain traits. The numerical stat controls the damage curve."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 149
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 396
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 94
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 130
+      }
+    ]
+  },
+  {
+    "id": "skill-tests-and-resistances",
+    "title": "Skill tests and elemental resistances",
+    "category": "Adventure",
+    "summary": "Check probability, group checks, and the scope of resistance.",
+    "sections": [
+      {
+        "title": "Checks",
+        "paragraphs": [
+          "Base success chance = clamp(stat ÷ difficulty, 5%, 95%). Skill-test traits modify this afterward. The four skill-critical traits each add 0.4 × trait quality for their matching stat; the final chance is not re-clamped to 95%. The random helper guarantees success when a final probability reaches 1.",
+          "Dungeon individual difficulty is integer StageDifficulty ÷ 4; group difficulty is integer StageDifficulty ÷ 3. Most group challenges let members try in order until one succeeds. Clear Rubble instead uses individual difficulty even though any member can save the group."
+        ]
+      },
+      {
+        "title": "Resistance",
+        "paragraphs": [
+          "Fire, Shadow, and Poison resistance each use reduction = 0.3 + 0.2 × active trait quality, giving 50% at quality 1. The matching hazard multiplies its damage by 1 − reduction. Identical resistance traits keep the highest-quality source, not their sum.",
+          "Resistance is requested explicitly by particular hazards rather than universally applied to every elemental-sounding attack. Tank Shadow Damage computes Shadow resistance for its display but does not multiply the actual damage by it in this implementation. The formula contains no explicit upper clamp."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 139
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 253
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 664
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 536
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 145
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 56
+      },
+      {
+        "path": "SeededRandom.cs",
+        "line": 78
+      }
+    ]
+  },
+  {
+    "id": "traits-and-party-buffs",
+    "title": "Traits and party buffs",
+    "category": "Adventure",
+    "summary": "Where trait strength comes from and how repeated effects combine.",
+    "sections": [
+      {
+        "title": "Sources",
+        "paragraphs": [
+          "Traits come from archetypes, classes, equipment, enhancements, and temporary party buffs. Archetype traits use character quality. Declared class traits are instantiated at quality 1, so training does not directly strengthen their percentage formulas; it still improves underlying stats.",
+          "Equipment traits use item quality; enhancement traits use enhancement quality. A group buff retains its source trait quality. Repeated copies of the same trait keep only the highest quality. Different traits modify their shared value in stored order."
+        ]
+      },
+      {
+        "title": "Party application and clearing",
+        "paragraphs": [
+          "At dungeon start every member applies group effects to every member, including themselves. Quest and War Effort intake apply the current members’ effects to the incoming member. Thus a newly added aura source should not be assumed to buff all earlier quest or war members retroactively.",
+          "ActivityCompleted increments Level and refreshes traits while clearing temporary buffs. Full Healers are healed completely. The Level counter itself is not an automatic per-level stat formula here; quality training is separate.",
+          "Equipment changes refresh traits while retaining stored buffs. Removing a buff removes one stored entry; consumed-aura behavior also depends on refresh and cleanup calls."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 274
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 304
+      },
+      {
+        "path": "Assets.Source.Adventure/ActiveTraitSet.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Source.Adventure/ActiveTrait.cs",
+        "line": 96
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 314
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/QuestBoard.cs",
+        "line": 151
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/WarEffort.cs",
+        "line": 100
+      }
+    ]
+  },
+  {
+    "id": "tank-and-healer",
+    "title": "Tanks, healers, and party formation",
+    "category": "Adventure",
+    "summary": "Tank qualification, targeting odds, and automatic healing.",
+    "sections": [
+      {
+        "title": "Tank role",
+        "paragraphs": [
+          "Fighter-archetype humans qualify as Tanks with an offhand Shield and Heavy armor qualification. This includes Fighter-derived classes. Tank reduces damage taken by 25%. The first qualifying member is the dungeon’s designated tank.",
+          "Ordinary dungeon hits select that tank with 85% probability on bosses or 65% on other stages, otherwise they select a random member. The random selection can also choose the tank. Scripted tank hazards use their own direct selection.",
+          "The displayed distance rank puts Tanks first, then melee or unarmed humans, then ranged humans. Ordinary targeting uses the probabilities above rather than a general front-row shield rule."
+        ]
+      },
+      {
+        "title": "Standard healing",
+        "paragraphs": [
+          "Base healing starts at Wisdom. If the caster has Healer and combat power exceeds Wisdom, add half the difference using integer division. Apply healing-done multipliers and round. The normal spell heals base healing ÷ 10 using integer division, with the recipient’s healing-taken traits applied afterward.",
+          "It chooses the eligible member with the lowest health fraction; full-health and Exhausted members are excluded. A dungeon uses its first Healer, and can stay on a cleared stage while that caster continues finding wounded targets. The final stage ends before this healing phase.",
+          "Quest progress ticks have a 25% chance to request that spell. Wars allow a rounded one-Healer-per-five-soldiers limit, clamped to 1–10, randomly excluding excess healers each tick. Inquisitor has Minor Healer rather than the full role."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 285
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 69
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 333
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 364
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 397
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 263
+      },
+      {
+        "path": "Assets.Source.Adventure/WarProgress.cs",
+        "line": 171
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 645
+      }
+    ]
+  },
+  {
+    "id": "class-progression",
+    "title": "Adventurer classes and advancement routes",
+    "category": "Adventure",
+    "summary": "The complete class tree and its equipment conditions.",
+    "sections": [
+      {
+        "title": "First specialization",
+        "paragraphs": [
+          "With Training Grounds specialization research, an Adventurer is checked halfway through training unless the energy payment just exhausted it. The first matching declared advancement wins."
+        ],
+        "table": {
+          "headers": [
+            "Class",
+            "Requirement"
+          ],
+          "rows": [
+            [
+              "Fighter",
+              "Main weapon’s declared main stat Strength; Heavy armor qualification"
+            ],
+            [
+              "Rogue",
+              "Main weapon’s declared main stat Dexterity; Medium armor qualification"
+            ],
+            [
+              "Mage",
+              "Main weapon’s declared main stat Magic; Light armor qualification"
+            ],
+            [
+              "Cleric",
+              "Main weapon’s declared main stat Wisdom; no armor condition"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Quest branches",
+        "paragraphs": [
+          "Fighter branches to Guardian or Battlemaster; Rogue to Thief or Ranger; Mage to Elementalist or Warlock; Cleric to Ritualist or Priest. The eight advancement quests change only members whose type exactly matches the required base class. Repeat quest rewards retain the advancement effect."
+        ]
+      },
+      {
+        "title": "Final specializations",
+        "paragraphs": [
+          "Arena advancement checks choose the first eligible declared route after a bout."
+        ],
+        "table": {
+          "headers": [
+            "Starting class",
+            "Final class",
+            "Route"
+          ],
+          "rows": [
+            [
+              "Guardian",
+              "Paladin",
+              "Crafting cr_paladin"
+            ],
+            [
+              "Guardian",
+              "Bulwark",
+              "Arena with Shield"
+            ],
+            [
+              "Battlemaster",
+              "Berserker",
+              "Arena without Heavy armor qualification"
+            ],
+            [
+              "Battlemaster",
+              "Reaver",
+              "Arena while dual wielding"
+            ],
+            [
+              "Thief",
+              "Assassin",
+              "Crafting cr_assassin"
+            ],
+            [
+              "Thief",
+              "Swashbuckler",
+              "Arena while dual wielding"
+            ],
+            [
+              "Ranger",
+              "Beast Master / Survivalist",
+              "Crafting cr_beast_master / cr_survivalist"
+            ],
+            [
+              "Elementalist",
+              "Pyromancer / Lithomancer",
+              "Crafting cr_pyromancer / cr_lithomancer"
+            ],
+            [
+              "Warlock",
+              "Necrolyte / Demonologist",
+              "Crafting cr_necrolyte / cr_demonologist"
+            ],
+            [
+              "Ritualist",
+              "Shaman",
+              "Crafting cr_shaman"
+            ],
+            [
+              "Ritualist",
+              "Inquisitor",
+              "Arena; equipped main-hand item has positive actual Strength appraiser stat"
+            ],
+            [
+              "Priest",
+              "Evangelist / Lightbringer",
+              "Crafting cr_evangelist / cr_lightbringer"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Armor qualification",
+        "paragraphs": [
+          "Only Head, Chest, and Off Hand participate. At least one of Head or Chest must be present, and at least one must match the requested category. None of the checked pieces may have a category above the requested one. A lighter partner piece is allowed; a completely unarmored character does not qualify.",
+          "A weapon’s main stat is the first largest declared BaseStats entry in stat enum order. Inquisitor’s condition is different: it checks the actual equipped weapon’s Strength value."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 205
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 393
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGroundsSlot.cs",
+        "line": 68
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 366
+      },
+      {
+        "path": "Assets.Source.Items.Type/EquipmentItemType.cs",
+        "line": 58
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 339
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/AdvancementReward.cs",
+        "line": 51
+      }
+    ]
+  },
+  {
+    "id": "class-trait-reference",
+    "title": "Class trait effects",
+    "category": "Adventure",
+    "summary": "Implemented role bonuses for every specialization, separate from power multipliers.",
+    "sections": [
+      {
+        "title": "Parent traits",
+        "paragraphs": [
+          "Here q is trait quality, normally fixed at 1 for declared class traits. Final classes retain their parent trait."
+        ],
+        "table": {
+          "headers": [
+            "Trait",
+            "Effect"
+          ],
+          "rows": [
+            [
+              "Guardian; Paladin/Bulwark retain it",
+              "With Shield: incoming damage ÷ (1 + 0.1q)"
+            ],
+            [
+              "Battlemaster; Berserker/Reaver retain it",
+              "Combat Power bonus stat × (1 + 0.05q)"
+            ],
+            [
+              "Thief; Assassin/Swashbuckler retain it",
+              "Dual wield damage multiplier × (1 + 0.1q)"
+            ],
+            [
+              "Ranger; Beast Master/Survivalist retain it",
+              "Bow damage multiplier × (1 + 0.1q)"
+            ],
+            [
+              "Elementalist; Pyromancer/Lithomancer retain it",
+              "Damage multiplier × (1 + 0.05q)"
+            ],
+            [
+              "Warlock; Necrolyte/Demonologist retain it",
+              "Group Health buff × (1 + 0.1q)"
+            ],
+            [
+              "Ritualist; Shaman/Inquisitor retain it",
+              "Damage multiplier × (1 + 0.2q)"
+            ],
+            [
+              "Priest; Evangelist/Lightbringer retain it",
+              "Healing done × (1 + 0.1q)"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Final effects",
+        "paragraphs": [
+          "These add to retained parent traits."
+        ],
+        "table": {
+          "headers": [
+            "Class",
+            "Additional effect"
+          ],
+          "rows": [
+            [
+              "Paladin",
+              "50% chance per dungeon healing hook: heal lowest-health eligible ally other than self for base healing ÷ 20"
+            ],
+            [
+              "Bulwark",
+              "Armor gains actual offhand Shield Armor × q"
+            ],
+            [
+              "Berserker",
+              "Without Heavy armor qualification: damage multiplier × (1 + 0.2q)"
+            ],
+            [
+              "Reaver",
+              "While dual wielding: damage multiplier × (1 + 0.1q)"
+            ],
+            [
+              "Assassin",
+              "Dungeon group buff: boss damage multiplier × (1 + 0.03q)"
+            ],
+            [
+              "Swashbuckler",
+              "Dungeon Tank group buff: boss damage taken × (1 − 0.1q)"
+            ],
+            [
+              "Beast Master, Necrolyte, Demonologist, Shaman",
+              "Dungeon damage multiplier gains +0.15q; companion is not a separate combatant"
+            ],
+            [
+              "Survivalist",
+              "Group Poison resistance"
+            ],
+            [
+              "Pyromancer",
+              "Group Fire resistance"
+            ],
+            [
+              "Lithomancer",
+              "Group +50q Armor"
+            ],
+            [
+              "Inquisitor",
+              "Combat Power bonus gains 0.5 × current Strength × q; Minor Healer role"
+            ],
+            [
+              "Evangelist",
+              "33.3% chance per dungeon healing hook: heal every member for base healing ÷ 40"
+            ],
+            [
+              "Lightbringer",
+              "Dungeon Tank group buff: healing received on boss stages × (1 + 0.1q)"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Healer inheritance",
+        "paragraphs": [
+          "Cleric, Ritualist, Priest, Shaman, Evangelist, and Lightbringer declare full Healer. Inquisitor instead has Minor Healer: 50% chance on dungeon-healing and war hooks to heal an eligible ally other than self for base healing ÷ 25. Fighter-archetype descendants can gain Tank through equipment regardless of branch."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 130
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 205
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 255
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 299
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 376
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 402
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Adventurers.cs",
+        "line": 462
+      }
+    ]
+  },
+  {
+    "id": "equipment-slots-and-hands",
+    "title": "Equipment slots, hands, and armor affinity",
+    "category": "Adventure",
+    "summary": "Slot unlocks, weapon conflicts, equipment rolls, and enhancements.",
+    "sections": [
+      {
+        "title": "Unlocks",
+        "paragraphs": [
+          "Head, Chest, Main Hand, and Off Hand are available by default. Food requires Campfire, Adventure Supplies, or Kitchen; Potion requires Adventure Supplies or Alchemist; Amulet/Ring require Jeweler; Trinket requires Inventor; Scroll requires Scribe.",
+          "The equipment gate supports a per-type EquipmentAllowed predicate, but the extracted source contains no assignments to it. Class affinity is primarily an advancement or trait condition rather than a general ban on other equipment."
+        ]
+      },
+      {
+        "title": "Weapon handling",
+        "paragraphs": [
+          "Greatsword, Bow, Rifle, Staff, and Battleaxe are two-handed. Sword and Dagger are ambidextrous. Shield, Tome, and Focus are Off Hand. Bow, Rifle, Staff, and Wand are ranged for distance rank.",
+          "HasWeapon requires a main-hand WeaponItemType. HasDualWield counts more than one such weapon entry. HasShield searches for any Shield weapon. Adding equipment removes conflicts and refreshes traits."
+        ]
+      },
+      {
+        "title": "Equipment and enhancements",
+        "paragraphs": [
+          "Equipment stat ranges are floor(base × 0.9 × item quality) to ceil(base × 1.1 × item quality). Integer rolls exclude the upper endpoint when bounds differ. Updating equipment quality rerolls these base stats. Enhancement stats are added afterward.",
+          "Without multi-enhancement research only one enhancement is allowed. With it, one enhancement per EnhancementType is allowed; duplicate types remain disallowed. Equipment and enhancement traits also contribute their own effects.",
+          "Each flat enhancement stat is round(declared enhancement stat × enhancement quality) before being added to the equipment. This differs from the equipment’s own rolled base stats. Quality-adding enhancements affect the item through their crafting workflow; trait quality remains the enhancement source’s quality."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 132
+      },
+      {
+        "path": "Assets.Source.Items.Type/HumanItemType.cs",
+        "line": 204
+      },
+      {
+        "path": "Assets.Source.Items/WeaponTypeExtensions.cs",
+        "line": 16
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 87
+      },
+      {
+        "path": "Assets.Source.Items.Data/EquipmentItemData.cs",
+        "line": 105
+      },
+      {
+        "path": "SeededRandom.cs",
+        "line": 41
+      },
+      {
+        "path": "Assets.Source.Items/ItemEnhancementData.cs",
+        "line": 22
+      }
+    ]
+  },
+  {
+    "id": "training-grounds-mechanics",
+    "title": "Training Grounds and quality growth",
+    "category": "Adventure",
+    "summary": "Sessions, dummies, food, repeat energy costs, and specialization timing.",
+    "sections": [
+      {
+        "title": "Session",
+        "paragraphs": [
+          "A session has 10 training ticks, normally every 2 ÷ Speed seconds. A manual action independently has a 50% chance to tick each occupied slot. The Capacity property starts at 3 and rises to 5 with research; intake scans the full five-slot array, so the property alone does not establish an enforced cap.",
+          "Each tick requests quality gain of QualityPerTick × building quality, affected by training traits, then awards a random half-to-full share. QualityPerTick is 0.02 without a dummy, 0.04 with one.",
+          "Ordinary humans get full gain in their first session, half in their second, and zero from the third onward. Adventurers retain full gain. A nonhuman dummy takes trainee base damage ÷ 10 on ticks with positive gain multiplier; dead dummies are removed."
+        ]
+      },
+      {
+        "title": "Energy and food",
+        "paragraphs": [
+          "Each tick costs 2 × (1 + TrainingCount) Energy before traits. With food research and Food equipped this is halved; automatic training also performs a second tick for food-bearing trainees each cycle. Food is consumed at completion while that technology is active.",
+          "At halfway, specialization research checks advancement if the energy payment did not exhaust the trainee. Exhausted trainees are removed. Finished trainees wait for output space, receive ActivityCompleted, and increase TrainingCount (ordinary humans stop incrementing at 3)."
+        ]
+      },
+      {
+        "title": "War cleanup",
+        "paragraphs": [
+          "War Effort separately cleans non-adventurer humans with TrainingCount above 4: the count becomes 4 and quality is capped at 1.5. This differs from ordinary training diminishing returns."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 39
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGrounds.cs",
+        "line": 151
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/TrainingGroundsSlot.cs",
+        "line": 41
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 340
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/WarEffort.cs",
+        "line": 113
+      }
+    ]
+  },
+  {
+    "id": "arena-combat-and-training",
+    "title": "Arena combat and training",
+    "category": "Adventure",
+    "summary": "Damage, bout-ending conditions, training ticks, and survivor outputs.",
+    "sections": [
+      {
+        "title": "Attacks",
+        "paragraphs": [
+          "Arena accepts two combatants and its normal update is blocked until Eastern war stage 4 is held. Each fighter applies group buffs only to itself. Attacks occur every 2 ÷ Speed seconds.",
+          "Each base damage is integer-divided by 10, then rolled from that value ÷ 1.2 to ×1.2 before armor and damage-taken traits. Both attack values are calculated before damage is applied. Trait hooks run after both hits."
+        ]
+      },
+      {
+        "title": "Ending a fight",
+        "paragraphs": [
+          "Normal bouts end when a human is below 10% health or a nonhuman dies. Humans that reached zero in normal mode receive a small 2–4 health heal at the next stopping check. Blood Sport waits for a death; if both die, one randomly receives the small heal.",
+          "The 10-tick counter limits training and energy deductions, not total bout duration. After it reaches zero, attacks continue until a health ending condition. Opponents whose damage rounds to zero or whose healing outpaces damage may stall.",
+          "Eligible humans gain a random half-to-full share of the quality request for each of those first 10 attacks. They pay 3 × (1 + ArenaCount) Energy. Adventurers stay eligible across bouts; ordinary humans train only on their first. Other combatants pay the base energy cost when they have an energy pool."
+        ],
+        "table": {
+          "headers": [
+            "Mode",
+            "QualityPerTick request"
+          ],
+          "rows": [
+            [
+              "Normal",
+              "0.04"
+            ],
+            [
+              "Blood Sport with any human",
+              "0.08"
+            ],
+            [
+              "Blood Sport with neither human",
+              "0.06; actual quality gain still requires an eligible human"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Outputs",
+        "paragraphs": [
+          "Only living, non-Exhausted humans return: adventurers repeatedly, ordinary humans only from their first arena visit. Resolution waits for eligible outputs to have room. Returning humans receive ActivityCompleted and ArenaCount increases.",
+          "The winner uses higher health fraction; ties select slot 2. Arena and ArenaWin advancement routes are checked in declaration order after output handling. The bout then pays its audience reward and clears both slots."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 135
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 173
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 240
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 201
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 355
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 296
+      }
+    ]
+  },
+  {
+    "id": "arena-income",
+    "title": "Arena audience income",
+    "category": "Adventure",
+    "summary": "How initial health, weapons, fighter types, and upgrades determine bout payment.",
+    "sections": [
+      {
+        "title": "Reward multiplier",
+        "paragraphs": [
+          "At fight start, multiply both fighters’ current health fractions. Halve that result for each human without a main-hand weapon. This initial value is retained until resolution, so starting wounded reduces the entire bout’s reward.",
+          "At resolution, multiply by 1 + 0.1 × Arena Cashier upgrade count. Each Adventurer then contributes ×1.2; each other human contributes ×1.1; nonhumans add no type multiplier. With Blood Sport, a multiplier above 1 receives another ×1.25."
+        ]
+      },
+      {
+        "title": "Payment currency",
+        "paragraphs": [
+          "Currency is selected with successive independent 25% checks, gated by strict reward thresholds. First try Ducats if the multiplier exceeds 1.5; if that fails or is unavailable, try Rings above 1.25, then Crowns above 1.09. Otherwise pay Gold.",
+          "Payment count is round(10,000 × final reward multiplier ÷ selected currency’s gold value). This changes the denomination, while the formula targets the same gold-equivalent amount. A resolved bout sets a four-second cooldown."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 135
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 299
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 321
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Arena.cs",
+        "line": 329
+      }
+    ]
+  },
+  {
+    "id": "quest-board-mechanics",
+    "title": "Quest Board progress and repeat costs",
+    "category": "Adventure",
+    "summary": "Five-adventurer work groups, progress-based hazards, energy, training, and blocked outputs.",
+    "sections": [
+      {
+        "title": "Progress",
+        "paragraphs": [
+          "A Quest Board holds up to five adventurers and updates once per second. Each living, non-Exhausted participant contributes base damage ÷ its individually adjusted quest difficulty. For quests with DurationMultiplier exactly 1, the contribution is capped at 2 per participant per update.",
+          "A contribution below 1 is penalized: the adventurer takes a random damage roll around 0.5 ÷ its original contribution (range ÷1.5 to ×1.5), then contributes only half the original amount. This makes badly underpowered adventurers both slower and vulnerable.",
+          "Progress is shared. Challenges and trait hooks execute once for each whole progress boundary crossed, not once per real second. Faster groups therefore run more hazard and energy ticks per second while finishing sooner. Progress may overshoot the target."
+        ]
+      },
+      {
+        "title": "Energy and completion",
+        "paragraphs": [
+          "Each whole progress tick costs EnergyPerTick × (1 + that adventurer’s QuestCount), before positive-energy-loss trait modifiers. The default EnergyPerTick is 0.2. Hazards may add to it. A 25% chance on each progress tick asks the first Healer to cast.",
+          "Completion waits until every output buffer is empty. It subtracts the quest’s current TickDuration from shared progress, grants first or repeat rewards, increments global completion count, then returns all current members through the adventurer output.",
+          "Each returned member receives the quest’s completion callback, ActivityCompleted, +1 QuestCount, and a random half-to-full quality gain from TrainingAdded × training upgrade multiplier. Default TrainingAdded is 0.12; each Quest Training upgrade adds +0.5 to the multiplier. Coin upgrades add +0.1 each to the currency multiplier."
+        ]
+      },
+      {
+        "title": "Repeated duration",
+        "paragraphs": [
+          "TickDuration = round(BaseDuration × DurationMultiplier^global completion count). Only quests with a multiplier other than 1 grow this way, and those quests also bypass the normal contribution cap of 2. This count belongs to the quest metadata, so different boards share its first-clear and repeat history.",
+          "Dead or Exhausted participants are removed on progress processing. Completion checks and per-progress hazard loops have a specific ordering; avoid assuming survival and removal happen immediately after each individual hazard."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/QuestBoard.cs",
+        "line": 166
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/QuestBoard.cs",
+        "line": 223
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/QuestBoard.cs",
+        "line": 83
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestProgress.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestProgress.cs",
+        "line": 58
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestProgress.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Source.Adventure/Quest.cs",
+        "line": 62
+      }
+    ]
+  },
+  {
+    "id": "quest-challenges-and-rewards",
+    "title": "Quest challenges, rewards, and permanent discounts",
+    "category": "Adventure",
+    "summary": "What specialization markers and quest hazards actually do, including first-clear economics.",
+    "sections": [
+      {
+        "title": "Quest hazards",
+        "paragraphs": [
+          "Triggered challenges independently roll each whole quest progress tick. Dangerous has the default 5% trigger chance: each participant takes random ordinary damage around (15 + quest difficulty ÷ 50) × (quest difficulty ÷ participant base damage), with a ÷1.3 to ×1.3 range.",
+          "Exhausting triggers every progress tick and adds 10% of the normal quest energy cost. Dexterity Energy triggers at the default 5% chance; each participant failing a Dexterity test against raw quest difficulty pays 15 times normal quest energy cost.",
+          "Fighter, Rogue, and Mage specialization markers halve effective difficulty for matching archetypes. Cleric specialization quarters it. These alter progress contribution and the low-performance penalty, but Dangerous and Dexterity Energy use the raw quest difficulty. Increase Duration is a descriptive marker; the actual duration formula is the quest’s DurationMultiplier."
+        ]
+      },
+      {
+        "title": "First and repeat rewards",
+        "paragraphs": [
+          "Currency and item rewards are granted once per completed group, not once per participant. Advancement rewards inspect every group member and change only exact matching class types. First-clear and repeat reward lists can differ.",
+          "Currency reward count is rounded after multiplying by the board or dungeon’s CoinLootMultiplier. Item reward count is fixed. Item quality uses the output element’s quality: when above 1, it rolls reward quality × random((1 + element quality) ÷ 2, element quality). The default reward quality is 1.",
+          "Each Quest Item Loot and Dungeon Item Loot upgrade contributes +0.1 element quality. It improves the quality of reward items rather than multiplying their declared counts."
+        ]
+      },
+      {
+        "title": "Permanent economic rewards",
+        "paragraphs": [
+          "Clear Mines first sets the Iron Ore discount flag; the resource cost multiplier becomes 0.25. Each repeat multiplies it by another 0.95: 0.25 × 0.95^repeat counter. Its difficulty is 470, base duration 180, and duration multiplier 1.05.",
+          "Forest Evangelism first halves forest-worker cost, with each repeat multiplying by another 0.95: 0.5 × 0.95^repeat counter. It has difficulty 600, base duration 180, duration multiplier 1.05, and the Cleric specialization marker. These discounts multiply other applicable cost calculations."
+        ]
+      },
+      {
+        "title": "Quest roster",
+        "paragraphs": [
+          "Ordinary quests are Patrol Market, Exterminate Rats, Dispel Library, Clear Mines, Forest Evangelism, and Mercurial Reagents. Eight further quests provide the intermediate class branches. Use each quest’s entity page for exact first/repeat items and research gates."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 31
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 48
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 120
+      },
+      {
+        "path": "Assets.Source.Adventure.Quests/SimpleQuests.cs",
+        "line": 65
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 422
+      },
+      {
+        "path": "Assets.Source.Player/ForestSettings.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/ItemReward.cs",
+        "line": 47
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/CurrencyReward.cs",
+        "line": 36
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/QuestItemLoot.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/DungeonItemLoot.cs",
+        "line": 15
+      }
+    ]
+  },
+  {
+    "id": "dungeon-run-mechanics",
+    "title": "Dungeon runs, stages, loot, and retreat",
+    "category": "Adventure",
+    "summary": "The five-adventurer expedition loop and what happens between fights.",
+    "sections": [
+      {
+        "title": "Starting",
+        "paragraphs": [
+          "A dungeon node needs five Adventurer inputs, an available selected dungeon, no active party, and the full supply currency payment. It consumes all five inputs and applies party buffs. Ticks occur every two seconds; this tick interval is fixed in Dungeon.Update rather than divided by the node’s Speed.",
+          "Each dungeon has eight stages, alternating nonboss and boss. Stage health = BaseHealth × StageDifficulty. Nightmare endgame adds its own health multiplier. Every active combat tick increments StageTick, then adds random party base damage ÷ 1.2 to ×1.2 to stage progress. Challenges and combat traits execute next.",
+          "Ordinary party damage follows: at least one hit occurs, with a 50% continuation chance after each hit. That gives an average two hits but no fixed maximum. Dead/Exhausted members are then removed. Losing the last member records a wipe and resets the run."
+        ]
+      },
+      {
+        "title": "Damage and boss escalation",
+        "paragraphs": [
+          "Dungeon damage rolls between integer StageDifficulty ÷ 50 and integer StageDifficulty ÷ 33, multiplied by the requested hazard multiplier. On boss stages the multiplier also gains ×(1 + 0.015 × StageTick). This grows every active combat tick, so stalled boss fights become more dangerous.",
+          "Normal hits use tank-targeting odds. Individual challenges can bypass armor, target everyone, consume energy, or impose separate skill checks."
+        ]
+      },
+      {
+        "title": "Loot and between-stage healing",
+        "paragraphs": [
+          "Reaching stage health sets three cooldown ticks before looting. Before granting rewards, all ItemReward outputs for the stage must exist and have no buffered items. A blocked output delays loot and energy payment, then retries.",
+          "Successful loot grants every stage reward, deducts the stage EnergyCost from each member (default 10), invokes the stage callback, and increments clear count. After limit-break checks, healing traits and the first full Healer can act. A cleared stage advances when the standard Healer has no eligible wounded target.",
+          "The final stage records victory and clears the party before the normal healing phase. Successful expeditions do not output the adventurers. A wipe or victory sets five cooldown ticks and resets stage progress to the beginning."
+        ]
+      },
+      {
+        "title": "Retreat and extra loot",
+        "paragraphs": [
+          "Retreat refunds each supply currency by the fraction 1 − zero-based CurrentStage ÷ total stages, truncating each refund to an integer. It clears the party and run with two cooldown ticks. Changing dungeon selection mid-run invokes retreat.",
+          "Trash Loot upgrades independently give a 5% × upgrade-count chance each nonboss combat tick to award 25% of every Ducat reward on that stage. This explicit 0.25 reward call does not use the node CoinLootMultiplier. Normal stage currency rewards do use the coin multiplier, which grows by 0.1 per coin upgrade."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Flow.Elements/Dungeon.cs",
+        "line": 61
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Dungeon.cs",
+        "line": 207
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Dungeon.cs",
+        "line": 200
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 83
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 324
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 277
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/CurrencyReward.cs",
+        "line": 31
+      }
+    ]
+  },
+  {
+    "id": "dungeon-hazard-reference",
+    "title": "Dungeon challenge reference",
+    "category": "Adventure",
+    "summary": "Every dungeon hazard’s trigger chance, target, check, and effect.",
+    "sections": [
+      {
+        "title": "How to read the table",
+        "paragraphs": [
+          "All probabilities are independent per active combat tick when the hazard is listed on the current stage. D means one fresh GetDungeonDamage(1) roll with that stage’s current difficulty and boss escalation. A ×multiplier requests a roll at that multiplier; final armor and traits are applied afterward unless marked armor-ignoring.",
+          "Individual difficulty = integer stage difficulty ÷ 4; group difficulty = integer stage difficulty ÷ 3. A group check stops at the first successful member. A random target is selected from current party members."
+        ]
+      },
+      {
+        "title": "Physical and skill hazards",
+        "paragraphs": [
+          "These use ordinary armor processing."
+        ],
+        "table": {
+          "headers": [
+            "Hazard",
+            "Chance",
+            "Effect"
+          ],
+          "rows": [
+            [
+              "Acid Rain",
+              "15%",
+              "One 0.2D roll dealt to every combatant"
+            ],
+            [
+              "Clear Rubble",
+              "15%",
+              "Any member passes Strength versus individual difficulty, or every party member loses one stage EnergyCost"
+            ],
+            [
+              "Arcane Traps",
+              "15%",
+              "Any member passes Magic group test, or a random target takes 1.5D"
+            ],
+            [
+              "Reaping Strike",
+              "25%",
+              "Tank, or random target without Tank, takes 1.5D"
+            ],
+            [
+              "Soul Reave",
+              "25%",
+              "Any member passes Wisdom group test, or random target loses 2 × stage EnergyCost"
+            ],
+            [
+              "Caltrops",
+              "15%",
+              "Each member failing Dexterity individual test takes 0.8D"
+            ],
+            [
+              "Flailing Strike",
+              "25%",
+              "Random target takes D"
+            ],
+            [
+              "Reckless Charge",
+              "25%",
+              "Any member passes Strength group test, or random target takes 2D"
+            ],
+            [
+              "Scatter Beam",
+              "15%",
+              "Each member failing Dexterity individual test takes 0.5D"
+            ],
+            [
+              "Chilling Howl",
+              "25%",
+              "Any member passes Wisdom group test, or everyone loses stage EnergyCost"
+            ],
+            [
+              "Tremors",
+              "15%",
+              "Each member failing Dexterity individual test takes 0.4D"
+            ],
+            [
+              "Extract Vigor",
+              "25%",
+              "Random target loses half stage EnergyCost"
+            ],
+            [
+              "Brutal Slam",
+              "25%",
+              "Tank, or random without Tank, takes 1.5D"
+            ],
+            [
+              "Barreling Charge",
+              "25%",
+              "Random target passes Dexterity individual test or takes 1.5D"
+            ],
+            [
+              "Muscle Magic",
+              "25%",
+              "Each member failing Strength individual test takes 0.8D"
+            ],
+            [
+              "Animated Books",
+              "15%",
+              "Any member passes Magic group test, or all party members each take 0.5D"
+            ],
+            [
+              "Animated Guardians",
+              "50%",
+              "Random target takes 0.5D"
+            ],
+            [
+              "Reap Soul",
+              "25%",
+              "Random target passes Wisdom individual test or loses fixed 30 Energy"
+            ],
+            [
+              "Exhausting",
+              "100%",
+              "Everyone loses stage EnergyCost ÷ 20; normally 0.5 Energy"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Elemental hazards",
+        "paragraphs": [
+          "These ignore armor and its unarmored penalty. Resistance is applied only as specified."
+        ],
+        "table": {
+          "headers": [
+            "Hazard",
+            "Chance",
+            "Effect"
+          ],
+          "rows": [
+            [
+              "Tank Fire Damage",
+              "25%",
+              "Tank or random takes 2D × (1 − Fire resistance)"
+            ],
+            [
+              "Tank Shadow Damage",
+              "25%",
+              "Tank or random takes 2D; Shadow resistance is calculated for UI but omitted from applied damage"
+            ],
+            [
+              "Dilute Poison",
+              "25%",
+              "Each failed Dexterity individual test takes 0.6D × (1 − Poison resistance)"
+            ],
+            [
+              "Major Poison",
+              "15%",
+              "First party member takes 0.6D × (1 − Poison resistance); implementation does not iterate over everyone"
+            ],
+            [
+              "Inject Poison",
+              "25%",
+              "Tank or random takes 2D × (1 − Poison resistance); without any reduction, gains Inject Poison debuff"
+            ],
+            [
+              "Desert Sun",
+              "25%",
+              "Shared 0.3D roll hits every combatant, modified by each Fire resistance"
+            ],
+            [
+              "Venom Barb",
+              "25%",
+              "Tank or random takes 3D × (1 − Poison resistance)"
+            ],
+            [
+              "Consuming Shadows",
+              "15%",
+              "Each failed Wisdom individual test takes 0.8D × (1 − Shadow resistance)"
+            ],
+            [
+              "Mana Poison",
+              "25%",
+              "Any member passes Magic group test, or random target takes 1.5D × (1 − Poison resistance)"
+            ],
+            [
+              "Pyroclasm",
+              "25%",
+              "Each failed Dexterity individual test takes 0.8D × (1 − Fire resistance)"
+            ],
+            [
+              "Waking Nightmare",
+              "25%",
+              "Everyone loses fixed 10 Energy × (1 − Shadow resistance), and takes 0.5D × same factor"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Injected poison",
+        "paragraphs": [
+          "The Inject Poison debuff itself deals 0.2D armor-ignoring damage on each dungeon combat hook. Its tick does not ask for another Poison resistance value. The initial injection avoids adding the debuff whenever the target already has any positive poison reduction. Multiple identical debuffs keep the highest trait quality rather than stacking duplicate active traits."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 128
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 145
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 180
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 365
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 430
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 622
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 662
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestChallenge.cs",
+        "line": 681
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 595
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 324
+      }
+    ]
+  },
+  {
+    "id": "energy-death-and-limit-break",
+    "title": "Energy, death, and dungeon limit breaks",
+    "category": "Adventure",
+    "summary": "What exhaustion removes, how recovery works, and when Faith can prolong an expedition.",
+    "sections": [
+      {
+        "title": "Health and exhaustion",
+        "paragraphs": [
+          "Health and Energy initialize at full fractions. A combatant is Dead when its health fraction is zero. A character with a positive energy pool is Exhausted at zero energy unless its LimitBreak flag is active. Nonhumans normally have no energy pool, and ordinary humans with zero base Energy ignore Energy equipment.",
+          "Energy loss is clamped to the 0–100% fraction. Positive loss passes through energy-loss traits; negative loss restores energy without those modifiers. Healing passes through healing-taken traits and clamps to maximum health. No separate persistent injury-status system is present in these core combatant classes; remaining health is the injury measure.",
+          "Quest and training systems remove exhausted participants instead of automatically resting them. Arena only returns living, non-Exhausted eligible humans. War removes soldiers on death. Dungeon parties are consumed by defeat, victory, or retreat rather than sent through a survivor output."
+        ]
+      },
+      {
+        "title": "Limit Break",
+        "paragraphs": [
+          "With Dungeon Limit Break, a member at zero energy can remain active while other party members still have energy. Its human combat power is reduced to 75%. If the whole party reaches zero energy, the run records a wipe and resets even with Limit Break.",
+          "With the Faith-based second limit break, an energy-loss call that reaches zero tries to spend round(requested energy loss × 5) Faith. On success it sets the member to exactly 1 CurrentEnergy. This is not a full refill and is not priced only on the missing portion. It can be invoked by stage costs or challenge losses.",
+          "A stage completion deducts energy before CheckForLimitBreak; this check can remove zero-energy members or end a fully exhausted run. Consumables that restore energy during later healing hooks cannot be assumed to rescue members already removed by earlier checks."
+        ]
+      },
+      {
+        "title": "Completion recovery",
+        "paragraphs": [
+          "ActivityCompleted raises Level, clears temporary buffs, and fully heals full Healers; it does not restore Energy. Potions, energy amulets, and energy scrolls supply explicit recovery effects. Other humans retain their remaining health when returned from training, quest, or arena activities."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 42
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 44
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 181
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 190
+      },
+      {
+        "path": "Assets.Source.Items.Data/CombatantItemData.cs",
+        "line": 207
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 237
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 314
+      },
+      {
+        "path": "Assets.Source.Items.Data/HumanItemData.cs",
+        "line": 244
+      },
+      {
+        "path": "Assets.Source.Flow.Upgrades/DungeonLimitBreak2.cs",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "id": "war-effort-mechanics",
+    "title": "War Effort combat, medals, and defense",
+    "category": "Adventure",
+    "summary": "How army power becomes territorial progress and why completed fronts still need soldiers.",
+    "sections": [
+      {
+        "title": "Army progress",
+        "paragraphs": [
+          "War updates every two seconds. Combine carried PartialProgress with each soldier’s base damage. A human without a main-hand weapon contributes half. Adventurers additionally multiply contribution by lerp(0.5, 1, energy fraction). This energy weighting is separate from zero-energy human power loss.",
+          "Enemy strength is interpolated between the current stage’s StartStrength and EndStrength using progress fraction. While accumulated power is strictly greater than current strength, subtract that strength and gain one progress point, recalculating as stages change. Retain the rounded remainder for future updates.",
+          "If the update gains no progress points, it loses one instead. Partial progress is still retained. A new conquered stage begins at 5 progress. Losing below zero falls back one stage with progress set to its maximum minus 5; the first stage floors at zero."
+        ]
+      },
+      {
+        "title": "Defense",
+        "paragraphs": [
+          "After every stage is cleared, the front becomes a defense meter. Required strength uses half the last stage’s EndStrength, except the North keeps full EndStrength. The defense meter can fall back into the final stage if lost. Holding territory is therefore an ongoing supply commitment.",
+          "The final defense meter’s base maximum is 100. Nightmare scaling can alter endgame maximum progress. Defense combat uses lower damage-hit and medal chances than active conquest."
+        ]
+      },
+      {
+        "title": "Damage, healing, medals",
+        "paragraphs": [
+          "Each soldier has a 66% chance per conquest update to be hit, or 33% in completed-front defense. The damage basis interpolates from the previous stage’s EnemyDamage to the current one where applicable, then rolls from that value to ×1.6, truncates to an integer, and uses normal armor/traits. Dead soldiers are removed.",
+          "A human carrying any WeaponItemType can generate a medal on a 20% conquest chance, or about 6.67% during defense. Its death adds another medal unit when that armed-human condition is met. The total is rounded after multiplying by the front’s MedalsMultiplier.",
+          "Full Healers cast once subject to the one-per-five-soldiers rounded limit, clamped 1–10. War trait hooks then run, including potions, passive regeneration, and other special effects."
+        ]
+      },
+      {
+        "title": "Inputs and remains",
+        "paragraphs": [
+          "War Effort accepts combatants; Adventurers require the adventurer-to-war technology. Intake continues while that front’s CanProgress condition allows it. The passive recruitment technology gives a separate 5% chance at one Medal per new soldier.",
+          "With a remains output present and empty, a soldier death has a 50% chance to create Human Remains carrying the soldier’s quality. This branch is not restricted to human item types by its code. Barracks has base output rate 0.5 × Speed and quality resource cost multiplier 2."
+        ]
+      },
+      {
+        "title": "All four war fronts",
+        "paragraphs": [
+          "These are base values before active Nightmare scaling. Ironcrag Siege intake is gated by currently holding Siege of Yensburg stage 4. Final defense keeps full last-stage strength in Ironcrag and halves it in other fronts."
+        ],
+        "table": {
+          "headers": [
+            "Front",
+            "Stage",
+            "Enemy strength",
+            "Progress amount",
+            "Enemy damage basis",
+            "Medal multiplier"
+          ],
+          "rows": [
+            [
+              "Southside Brigands",
+              "1. Byrgenwald",
+              "100 → 400",
+              "100",
+              "15",
+              "1"
+            ],
+            [
+              "Southside Brigands",
+              "2. Byrgenwald College",
+              "400 → 800",
+              "150",
+              "18",
+              "1"
+            ],
+            [
+              "Southside Brigands",
+              "3. Feral Den",
+              "800 → 1200",
+              "200",
+              "21",
+              "1"
+            ],
+            [
+              "Southside Brigands",
+              "4. Yensmouth",
+              "1200 → 1600",
+              "250",
+              "24",
+              "1"
+            ],
+            [
+              "Orcish Horde",
+              "1. Arlingen Farmstead",
+              "2000 → 4000",
+              "100",
+              "24",
+              "1.5"
+            ],
+            [
+              "Orcish Horde",
+              "2. Ruins of Arlingen",
+              "4000 → 6000",
+              "150",
+              "28",
+              "1.5"
+            ],
+            [
+              "Orcish Horde",
+              "3. Terminus Gorge",
+              "6000 → 8000",
+              "200",
+              "32",
+              "1.5"
+            ],
+            [
+              "Orcish Horde",
+              "4. Bastion",
+              "8000 → 10000",
+              "250",
+              "36",
+              "1.5"
+            ],
+            [
+              "Siege of Yensburg",
+              "1. Artisan Row",
+              "8000 → 10000",
+              "100",
+              "36",
+              "1.5"
+            ],
+            [
+              "Siege of Yensburg",
+              "2. Cathedral of Saint Ilonia",
+              "10000 → 12000",
+              "150",
+              "42",
+              "1.5"
+            ],
+            [
+              "Siege of Yensburg",
+              "3. Castle District",
+              "12000 → 13000",
+              "200",
+              "43",
+              "1.5"
+            ],
+            [
+              "Siege of Yensburg",
+              "4. Throne Room",
+              "13000 → 14000",
+              "250",
+              "44",
+              "1.5"
+            ],
+            [
+              "Ironcrag Siege",
+              "1. The Old Guildhouse",
+              "12000 → 14000",
+              "100",
+              "42",
+              "2"
+            ],
+            [
+              "Ironcrag Siege",
+              "2. Deadrock Pass",
+              "14000 → 17000",
+              "150",
+              "44",
+              "2"
+            ],
+            [
+              "Ironcrag Siege",
+              "3. Ironcrag Summit",
+              "17000 → 19000",
+              "200",
+              "46",
+              "2"
+            ],
+            [
+              "Ironcrag Siege",
+              "4. Pinnacle Ruins",
+              "19000 → 21000",
+              "250",
+              "47",
+              "2"
+            ]
+          ]
+        }
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure/WarProgress.cs",
+        "line": 61
+      },
+      {
+        "path": "Assets.Source.Adventure/WarProgress.cs",
+        "line": 232
+      },
+      {
+        "path": "Assets.Source.Player/GamePlayer.cs",
+        "line": 154
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/WarEffort.cs",
+        "line": 92
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/WarEffort.cs",
+        "line": 135
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Barracks.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Adventure.Wars/Forest.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Adventure.Wars/East.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Adventure.Wars/Yensburg.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Adventure.Wars/North.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Adventure.Wars/North.cs",
+        "line": 17
+      }
+    ]
+  },
+  {
+    "id": "special-adventure-equipment",
+    "title": "Adventure potions, auras, scrolls, and rescue effects",
+    "category": "Adventure",
+    "summary": "Consumable thresholds and unusual equipment behavior that raw stat lists do not explain.",
+    "sections": [
+      {
+        "title": "Potions and rations",
+        "paragraphs": [
+          "Healing Potion triggers below 33% health and heals 70 × item quality × the wearer’s healing-done multiplier. Greater Healing Potion uses 180. The wearer’s healing-taken traits then apply. Each consumes the Potion slot. They have hooks in war, quest, arena, and dungeon healing.",
+          "Energy Potion triggers below 33% energy, restores 40 × quality, and consumes the Potion slot. Regeneration Potion instead heals 6 × quality on every supported hook and is not consumed by that helper. Rations multiply requested training by 1 + 0.25 × quality.",
+          "Lifebearer (Amulet of Healing) multiplies healing received by 1 + 0.2 × quality. Lifebloom heals 2 × quality to eligible rolled recipients: 100% chance for self in arena, 50% per quest party member, 80% per dungeon member. Its war chance uses integer 4 ÷ army count; armies above four therefore receive no Lifebloom healing from that hook."
+        ]
+      },
+      {
+        "title": "Group energy and resistance",
+        "paragraphs": [
+          "Amulet of Energy restores 40 × quality to the party in quest/dungeon hooks when any member is below 30% energy, or when every member is at most 60%. It consumes the wearer’s Amulet. The energy helper’s ordered scan implements these thresholds.",
+          "Fire, Shadow, and Poison protection amulets grant their matching group resistance. Triune Shield grants all three only to its wearer. Resistance uses the highest-quality active source.",
+          "Fireball Amulet adds 45 × quality × wearer damage multiplier to war PartialProgress on war hooks and dungeon StageProgress on dungeon healing hooks. It does not use a separate attack entity."
+        ]
+      },
+      {
+        "title": "Scrolls",
+        "paragraphs": [
+          "Healing Scroll triggers below 33% health, heals 220 × quality × wearer healing-done multiplier, and consumes Scroll. Group Healing Scroll heals 80 × quality × wearer healing-done multiplier: it triggers when anyone is below 35% health, or everyone is at most 65%. War recipients use integer 4 ÷ army count as their chance, so larger armies can consume it without healing recipients.",
+          "Damage Scroll adds 4 × wearer CombatPower on the fifth active combat tick of each boss stage. The hook does not consume it and does not directly multiply this extra hit by item quality or damage-trait multiplier.",
+          "Energy Scroll restores 30 × quality using the same 30% / 60% group-energy thresholds. Its helper removes Amulet rather than Scroll. In this installed implementation it can therefore remove an equipped amulet while retaining the scroll."
+        ]
+      },
+      {
+        "title": "Divine protection",
+        "paragraphs": [
+          "Pontiff Ring applies DivineProtection as an aura; Martyr Relic supplies DivineProtection2 on its wearer. When pending damage is at least current health, the protection heals maximum health through normal healing and returns zero incoming damage. Martyr Relic removes Trinket.",
+          "The ring branch, in dungeon context, removes Pontiff Rings from party members but asks to remove DivineProtection2 buffs rather than DivineProtection. Stored/aura refresh behavior means it should not be described as a guaranteed clean one-charge effect. Its cleanup branch is also dungeon-specific. These are code-observed exceptions, not promises about intended design."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 615
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 627
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 499
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerTrait.cs",
+        "line": 639
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier8.cs",
+        "line": 144
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier8.cs",
+        "line": 237
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier8.cs",
+        "line": 265
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier9.cs",
+        "line": 188
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier10.cs",
+        "line": 260
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier10.cs",
+        "line": 412
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier10.cs",
+        "line": 444
+      },
+      {
+        "path": "Assets.Source.Items.Impl/Tier10.cs",
+        "line": 334
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-ruins",
+    "title": "Ruins of Arlingen — expedition guide",
+    "category": "Adventure",
+    "summary": "Ruins of Arlingen is the first dungeon. Its difficulty rises from 1,000 to 2,000 across four approaches and four bosses. Strength, Magic, Dexterity, Fire protection, and energy all have distinct uses here.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Ruins of Arlingen is the first dungeon. Its difficulty rises from 1,000 to 2,000 across four approaches and four bosses. Strength, Magic, Dexterity, Fire protection, and energy all have distinct uses here.",
+          "Unlock and availability: Dungeon research; currently hold Orcish Horde stage 2. Entry supplies: 210 Rings. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Ruined Hall",
+              "1000",
+              "50,000",
+              "Clear Rubble",
+              "25 Ducat"
+            ],
+            [
+              "2. Crull the Defiler (boss)",
+              "1300",
+              "39,000",
+              "Gout of Flame, Acid Rain",
+              "50 Ducat; 8 Ancient Gemstone"
+            ],
+            [
+              "3. Armory Wing",
+              "1300",
+              "65,000",
+              "Arcane Traps",
+              "25 Ducat"
+            ],
+            [
+              "4. Quartermaster Vadric (boss)",
+              "1600",
+              "48,000",
+              "Reaping Strike, Soul Reave",
+              "50 Ducat; 12 Ancient Gemstone"
+            ],
+            [
+              "5. Cell Block Z",
+              "1600",
+              "80,000",
+              "Tripping Hazard",
+              "25 Ducat"
+            ],
+            [
+              "6. \"Black Eye\" Marlowe (boss)",
+              "1800",
+              "54,000",
+              "Flailing Strike, Reckless Charge",
+              "50 Ducat; 16 Ancient Gemstone"
+            ],
+            [
+              "7. Solitary Confinement",
+              "1800",
+              "90,000",
+              "Exhausting",
+              "25 Ducat"
+            ],
+            [
+              "8. Watcher of Tomorrows (boss)",
+              "2000",
+              "60,000",
+              "Extinguish Hope, Scattershot Beams",
+              "16 Ancient Gemstone; 8 Eye of the Watcher"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Crull the Defiler combines tank-targeted Fire damage with party-wide Acid Rain. Quartermaster Vadric tests Wisdom through Soul Reave while striking the tank. Black Eye Marlowe can be stopped by a successful group Strength check. The final Watcher of Tomorrows combines the code’s Tank Shadow Damage exception with Dexterity-checked Scatter Beam.",
+          "Solitary Confinement adds Exhausting every active tick, on top of the eight default stage costs. A tank/healer composition reduces ordinary damage pressure, but it does not replace the separate skill checks."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "250 Ducats; 52 Ancient Gems; 8 Observer Eyes. These are full-run base totals, excluding coin upgrades, trash procs, and quality variation."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 82
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 98
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Ruins.cs",
+        "line": 108
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-feral-den",
+    "title": "Feral Den — expedition guide",
+    "category": "Adventure",
+    "summary": "Feral Den ranges from difficulty 1,400 to 2,900. Poison resistance and energy recovery are especially relevant to its later stages.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Feral Den ranges from difficulty 1,400 to 2,900. Poison resistance and energy recovery are especially relevant to its later stages.",
+          "Unlock and availability: Feral dungeon research; currently hold Southside Brigands stage 3. Entry supplies: 320 Rings. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Forest Floor",
+              "1400",
+              "70,000",
+              "Exhausting",
+              "35 Ducat"
+            ],
+            [
+              "2. Corrupted Guardian (boss)",
+              "1600",
+              "48,000",
+              "Flailing Strike, Acid Rain",
+              "70 Ducat; 30 Unidentified Plants"
+            ],
+            [
+              "3. Den Entrance",
+              "1700",
+              "85,000",
+              "Clear Rubble",
+              "35 Ducat"
+            ],
+            [
+              "4. Alpha Beast (boss)",
+              "2000",
+              "60,000",
+              "Reckless Charge, Dilute Miasma",
+              "70 Ducat; 40 Unidentified Plants"
+            ],
+            [
+              "5. Contaminated Aquifer",
+              "2200",
+              "110,000",
+              "Concentrated Miasma",
+              "35 Ducat"
+            ],
+            [
+              "6. Patient Zero (boss)",
+              "2400",
+              "72,000",
+              "Concentrated Miasma, Chilling Howl",
+              "70 Ducat; 12 Toxin Sample"
+            ],
+            [
+              "7. Ratling Burrows",
+              "2500",
+              "125,000",
+              "Tremors",
+              "35 Ducat"
+            ],
+            [
+              "8. Gnawtooth the Toxiferous (boss)",
+              "2900",
+              "87,000",
+              "Venom Injector, Extract Vigor",
+              "20 Toxin Sample; 60 Unidentified Plants"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Contaminated Aquifer and Patient Zero use Major Poison, whose installed implementation hits the first party member. Patient Zero also uses a group Wisdom check through Chilling Howl. Gnawtooth the Toxiferous targets the tank with Inject Poison and randomly drains energy through Extract Vigor.",
+          "Any positive Poison reduction prevents the initial Inject Poison debuff from being added. Its later damage ticks bypass armor. Strength helps with the Den Entrance rubble and Alpha Beast charge; Dexterity helps with poison avoidance and Ratling Burrows tremors."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "350 Ducats; 130 Unidentified Plants; 32 Toxin Samples. Full-run base totals before upgrades or trash procs."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 97
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/FeralDen.cs",
+        "line": 107
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-temple",
+    "title": "Temple of the Last Rite — expedition guide",
+    "category": "Adventure",
+    "summary": "Temple of the Last Rite ranges from difficulty 2,200 to 3,300 and provides reagents with several different uses. Fire resistance addresses Desert Sun in the opening half; Poison resistance protects against Jax the Stinger.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Temple of the Last Rite ranges from difficulty 2,200 to 3,300 and provides reagents with several different uses. Fire resistance addresses Desert Sun in the opening half; Poison resistance protects against Jax the Stinger.",
+          "Unlock and availability: Temple dungeon research; currently hold Orcish Horde stage 4. Entry supplies: 220 Crowns. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Temple Grounds",
+              "2200",
+              "110,000",
+              "Scorching Heat",
+              "45 Ducat"
+            ],
+            [
+              "2. Jax the Stinger (boss)",
+              "2400",
+              "72,000",
+              "Scorching Heat, Venom Injector",
+              "90 Ducat; 12 Toxin Sample"
+            ],
+            [
+              "3. The Great Pyramid",
+              "2400",
+              "120,000",
+              "Scorching Heat",
+              "45 Ducat"
+            ],
+            [
+              "4. Crystallax (boss)",
+              "2600",
+              "78,000",
+              "Brutal Slam, Flailing Strike",
+              "90 Ducat; 90 Mercurial Flux"
+            ],
+            [
+              "5. Embalming Chamber",
+              "2600",
+              "130,000",
+              "Arcane Traps",
+              "45 Ducat"
+            ],
+            [
+              "6. Amun the Orchestrator (boss)",
+              "2800",
+              "84,000",
+              "Extinguish Hope, Tremors",
+              "90 Ducat; 8 Precursor Symbiont"
+            ],
+            [
+              "7. Inner Sanctum",
+              "3000",
+              "150,000",
+              "Arcane Traps",
+              "60 Ducat"
+            ],
+            [
+              "8. Sholrath's Chosen (boss)",
+              "3300",
+              "99,000",
+              "Extinguish Hope, Consuming Shadows",
+              "6 Precursor Symbiont; 6 Dark Essence"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Crystallax uses two physical direct strikes: Brutal Slam and Flailing Strike. The Embalming Chamber and Inner Sanctum use a group Magic trap check. Amun the Orchestrator adds Tremors to tank-targeted shadow damage.",
+          "Sholrath’s Chosen combines Consuming Shadows with Tank Shadow Damage. Shadow resistance helps the Wisdom-failed party hazard, but the tank-targeted shadow challenge omits resistance multiplication in this implementation."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "465 Ducats; 12 Toxin Samples; 90 Mercurial Flux; 14 Symbiote Reagents; 6 Dark Essence. Full-run base totals before upgrades or trash procs."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 56
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 72
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 82
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 98
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Temple.cs",
+        "line": 108
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-catacombs",
+    "title": "Yensburg Catacombs — expedition guide",
+    "category": "Adventure",
+    "summary": "Yensburg Catacombs ranges from difficulty 3,200 to 5,000. Its first approach is difficulty 3,500 while its first boss is 3,200; the sequence is not strictly increasing.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Yensburg Catacombs ranges from difficulty 3,200 to 5,000. Its first approach is difficulty 3,500 while its first boss is 3,200; the sequence is not strictly increasing.",
+          "Unlock and availability: Catacombs research; currently hold Siege of Yensburg stage 3. Entry supplies: 320 Crowns. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Sewer Tunnels",
+              "3500",
+              "175,000",
+              "Dilute Miasma",
+              "45 Ducat"
+            ],
+            [
+              "2. Uzgrim the Hermit (boss)",
+              "3200",
+              "96,000",
+              "Mana Scourge, Gout of Flame",
+              "90 Ducat; 1 Demonic Writings"
+            ],
+            [
+              "3. Hall of Bones",
+              "3800",
+              "190,000",
+              "Tripping Hazard",
+              "45 Ducat"
+            ],
+            [
+              "4. Bone Golem (boss)",
+              "4100",
+              "123,000",
+              "Brutal Slam, Flailing Strike",
+              "90 Ducat; 1 Demonic Writings"
+            ],
+            [
+              "5. Mausoleum of Heroes",
+              "4200",
+              "210,000",
+              "Exhausting",
+              "45 Ducat"
+            ],
+            [
+              "6. Guardian of the Ninth Gate (boss)",
+              "4500",
+              "135,000",
+              "Gout of Flame, Pyroclasm",
+              "90 Ducat; 2 Demonic Writings"
+            ],
+            [
+              "7. Sanctum of Saint Ilonia",
+              "4700",
+              "235,000",
+              "Arcane Traps",
+              "60 Ducat"
+            ],
+            [
+              "8. Herald of the Legion (boss)",
+              "5000",
+              "150,000",
+              "Gout of Flame, Reaping Strike",
+              "120 Ducat; 2 Demonic Writings"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Uzgrim the Hermit combines Magic-checked Mana Poison with tank Fire damage. Bone Golem uses ordinary armor-sensitive strikes. Guardian of the Ninth Gate adds Dexterity-checked Pyroclasm to tank Fire damage, making party Fire resistance useful beyond just the tank.",
+          "Mausoleum of Heroes has constant Exhausting pressure. The final Sanctum tests Magic; Herald of the Legion combines tank Fire damage and Reaping Strike. Maintaining health and energy across all eight stages matters as much as the final boss."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "585 Ducats; 6 Demonic Writings. Full-run base totals before upgrades or trash procs."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 97
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Catacombs.cs",
+        "line": 107
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-archive",
+    "title": "Timeless Archive — expedition guide",
+    "category": "Adventure",
+    "summary": "Timeless Archive ranges from difficulty 5,000 to 6,600. Boss BaseHealth is 40 rather than the 30 used by earlier dungeons, so equal difficulty would already produce a longer fight.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Timeless Archive ranges from difficulty 5,000 to 6,600. Boss BaseHealth is 40 rather than the 30 used by earlier dungeons, so equal difficulty would already produce a longer fight.",
+          "Unlock and availability: Archive research; currently hold Ironcrag Siege stage 1. Entry supplies: 180 Ducats. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Vault Entrance",
+              "5000",
+              "250,000",
+              "Tripping Hazard",
+              "45 Ducat"
+            ],
+            [
+              "2. Champion of the Vault (boss)",
+              "5300",
+              "212,000",
+              "Reaping Strike, Barreling Charge",
+              "90 Ducat; 1 Heretic Mago-tech"
+            ],
+            [
+              "3. Librarium",
+              "5300",
+              "265,000",
+              "Cognitohazard",
+              "45 Ducat"
+            ],
+            [
+              "4. Cannaan the Librarian (boss)",
+              "5700",
+              "228,000",
+              "Brutal Slam, Muscle Magic",
+              "90 Ducat; 1 Heretic Mago-tech"
+            ],
+            [
+              "5. Holding Cells",
+              "5700",
+              "285,000",
+              "Clear Rubble",
+              "45 Ducat"
+            ],
+            [
+              "6. Pelonnar the Dragonlord (boss)",
+              "6200",
+              "248,000",
+              "Acid Rain, Chilling Howl",
+              "90 Ducat; 2 Heretic Mago-tech"
+            ],
+            [
+              "7. Private Collection",
+              "6200",
+              "310,000",
+              "Animated Guardians",
+              "60 Ducat"
+            ],
+            [
+              "8. The Mad Archivist (boss)",
+              "6600",
+              "264,000",
+              "Consuming Shadows, Extract Vigor",
+              "120 Ducat; 2 Heretic Mago-tech"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Champion of the Vault mixes a tank strike with a random target’s Dexterity check. Cannaan the Librarian tests each adventurer’s Strength through Muscle Magic. Pelonnar the Dragonlord combines party Acid Rain and a group Wisdom energy check.",
+          "Private Collection has Animated Guardians at a 50% hazard chance each combat tick. The Mad Archivist combines Wisdom-checked Consuming Shadows with random energy extraction. A party with several useful skill stats avoids relying only on its main damage stat."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "585 Ducats; 6 Heretic Technologies. Full-run base totals before upgrades or trash procs."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 71
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 97
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Archive.cs",
+        "line": 107
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "dungeon-guide-tomb-of-sholrath",
+    "title": "Tomb of Sholrath — expedition guide",
+    "category": "Adventure",
+    "summary": "Tomb of Sholrath has base difficulties 6,400–10,000. Its eight stages alternate BaseHealth 50 approaches with BaseHealth 40 bosses. Active Nightmare scaling increases difficulty, health, and entry cost.",
+    "sections": [
+      {
+        "title": "Entry and run structure",
+        "paragraphs": [
+          "Tomb of Sholrath has base difficulties 6,400–10,000. Its eight stages alternate BaseHealth 50 approaches with BaseHealth 40 bosses. Active Nightmare scaling increases difficulty, health, and entry cost.",
+          "Unlock and availability: Endgame dungeon research; currently hold Ironcrag Siege stage 4. Entry supplies: 380 Ducats before Nightmare scaling. Availability depends on currently holding the required war progress, not merely having held it once.",
+          "Send five Adventurers. All eight stages have the default 10 Energy completion cost, for 80 Energy before hazards, limit breaks, and recovery. The party is cleared at the end of a run rather than returned as an output."
+        ]
+      },
+      {
+        "title": "Stage route",
+        "paragraphs": [
+          "Health in this table is BaseHealth × base difficulty, before any active Nightmare multipliers. Rewards show declared base quantities before node currency/quality effects."
+        ],
+        "table": {
+          "headers": [
+            "Stage",
+            "Base difficulty",
+            "Base stage health",
+            "Challenges",
+            "Base rewards"
+          ],
+          "rows": [
+            [
+              "1. Lake of Fire",
+              "6400",
+              "320,000",
+              "Pyroclasm",
+              "800 Faith"
+            ],
+            [
+              "2. Belgor the Infernal (boss)",
+              "7200",
+              "288,000",
+              "Pyroclasm, Gout of Flame",
+              "1750 Faith"
+            ],
+            [
+              "3. Halls of Sacrifice",
+              "7400",
+              "370,000",
+              "Scorching Heat",
+              "1100 Faith"
+            ],
+            [
+              "4. The Last High Priest (boss)",
+              "8000",
+              "320,000",
+              "Scorching Heat, Mana Scourge",
+              "1900 Faith"
+            ],
+            [
+              "5. Obsidian Fortress",
+              "8400",
+              "420,000",
+              "Animated Guardians",
+              "1100 Faith"
+            ],
+            [
+              "6. Herald of Sholrath (boss)",
+              "9200",
+              "368,000",
+              "Consuming Shadows, Reap Soul",
+              "1900 Faith"
+            ],
+            [
+              "7. Crystalline Prison",
+              "9400",
+              "470,000",
+              "Cognitohazard",
+              "1700 Faith"
+            ],
+            [
+              "8. Tendril of Sholrath (boss)",
+              "10000",
+              "400,000",
+              "Extinguish Hope, Waking Nightmare",
+              "2 Fragmented Nightmares if ready; 1 Distilled Nightmare progression if ready"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Preparation and encounter notes",
+        "paragraphs": [
+          "Belgor the Infernal combines Pyroclasm and tank Fire damage. The Last High Priest combines Desert Sun and Magic-checked Mana Poison. Herald of Sholrath uses Consuming Shadows and a Wisdom check that can drain fixed 30 Energy.",
+          "Tendril of Sholrath combines the Tank Shadow Damage resistance exception with Waking Nightmare, which drains energy and deals Shadow-scaled armor-ignoring damage to every party member. Shadow protection remains valuable for Waking Nightmare even though the separate tank strike omits it."
+        ]
+      },
+      {
+        "title": "Full clear rewards",
+        "paragraphs": [
+          "10,250 Faith across the first seven stages. The final stage conditionally grants 2 Fragmented Nightmares and 1 Distilled Nightmare progression; see Nightmare reward readiness. Base totals exclude currency multipliers."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 55
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 70
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 80
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 95
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 105
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonStage.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      }
+    ]
+  },
+  {
+    "id": "nightmare-adventure-scaling",
+    "title": "Nightmare adventure scaling and final rewards",
+    "category": "Adventure",
+    "summary": "How repeated endgame victories change Ironcrag Siege and Tomb of Sholrath.",
+    "sections": [
+      {
+        "title": "Active scaling",
+        "paragraphs": [
+          "When Nightmare is active, Tomb of Sholrath uses these multipliers based on total NightmareCount N: stage difficulty ×(1 + 0.01N), stage health additionally ×(1 + 0.05N), and supply cost ×(1 + 0.1N). Difficulty is rounded first, then health is calculated and cast to a long after the extra health multiplier.",
+          "Because stage health already multiplies BaseHealth by the scaled difficulty, effective health grows from both the difficulty and dedicated health factors. Dungeon challenge checks and damage also rise with the scaled difficulty.",
+          "Ironcrag Siege is the endgame war. While Nightmare is active, its maximum progress uses ×(1 + 0.05N); enemy strength and damage use ×(1 + 0.01N). Its stage-completion branch still compares progress to the stage’s declared ProgressAmount, so do not interpret the scaled MaxProgress property as an unconditional replacement of every completion threshold."
+        ]
+      },
+      {
+        "title": "Reward readiness",
+        "paragraphs": [
+          "Fragmented Nightmare rewards are ready while Nightmare is active, or for the very first victory when NightmareCount is zero. Their base reward is two items.",
+          "Distilled Nightmare is ready for the first victory regardless of activity state, or afterward when Nightmare is active and NightmareProgress exceeds 0.99. When ready it increases NightmareCount by one and subtracts one progress only if progress is at least 1.",
+          "A Distilled Nightmare reward resets Ironcrag’s final hold: a completed front is moved back to zero-based stage 3, and that stage’s progress is set to 10. The Tomb’s current availability requirement is final Ironcrag completion, so another attempt depends on restoring that war condition.",
+          "The first ready Distilled reward also opens the game’s victory popup. Reaching the last boss is therefore distinct from qualifying for every repeat reward."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 142
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 147
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 152
+      },
+      {
+        "path": "Assets.Source.Adventure.Dungeons/Endgame.cs",
+        "line": 128
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 41
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonProgress.cs",
+        "line": 314
+      },
+      {
+        "path": "Assets.Source.Adventure/WarProgress.cs",
+        "line": 41
+      },
+      {
+        "path": "Assets.Source.Adventure/WarProgress.cs",
+        "line": 248
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/FragmentedNightmareReward.cs",
+        "line": 10
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/DistilledNightmareReward.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/DistilledNightmareReward.cs",
+        "line": 46
+      }
+    ]
+  }
+]

@@ -1,0 +1,25 @@
+# WorldFlowRestaurant — source reference
+
+Assets.Behaviour.Flow.Elements/WorldFlowRestaurant.cs · 71 lines · 1 linked articles
+
+## Audit classification
+
+Game implementation, UI, data definition or utility. Symbol inventory was generated from this complete source file. Source references are static inspection, not runtime tests.
+
+## Public and protected symbols
+
+| Line | Declaration |
+| --- | --- |
+| 11 | public class WorldFlowRestaurant : MonoBehaviour, ITooltipCustomSource |
+| 45 | public void AddTooltipCustomContent(UITooltip tooltip) |
+| 67 | public void UpdateTooltip() |
+
+## Documented by
+
+| Wiki article |
+| --- |
+| [Production status, routing buttons, and recent results](production-status-and-controls.md) |
+
+## Sources
+
+- `Assets.Behaviour.Flow.Elements/WorldFlowRestaurant.cs:1`

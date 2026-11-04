@@ -1,0 +1,1785 @@
+[
+  {
+    "id": "map-navigation-and-dragging",
+    "title": "Map navigation and dragging",
+    "category": "Reference",
+    "summary": "Camera scales, click-to-move, drag-to-move, snapping, and cancellation.",
+    "sections": [
+      {
+        "title": "Camera",
+        "paragraphs": [
+          "WASD moves the world or technology camera. Movement speed scales with 5−zoomLevel. Zoom levels 0–4 use scales 0.25, 0.5, 1, 2, and 4; maximum level is 3 on screens no taller than 1400 unless UI scale exceeds 1, otherwise 4. Zoom adjusts around the mouse. Bounds surround placed machines with about 1000 world units of margin; technology bounds surround visible tech nodes."
+        ]
+      },
+      {
+        "title": "Click or drag",
+        "paragraphs": [
+          "DragDropManager supports holding the left mouse button and releasing to drop, or clicking once to pick up and again to drop. New drags are blocked during deconstruction and the initial tutorial blackout. Text fields delay normal player shortcuts while focused."
+        ]
+      },
+      {
+        "title": "Move a machine",
+        "paragraphs": [
+          "Click or drag its title label. Ctrl bypasses grid snapping. Dropping onto another machine restores its prior position. Cancel restores its old position unless it has already been transferred to another workflow. Moving a single machine to another workflow disconnects all of its pipes.",
+          "FlowCollider separates dragged machines into another layer; collision tests reject machine overlaps, while decorations are allowed behind machines. Prefab lookup uses the machine ElementType to select its UI, decorative background, and category title border."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowCamera.cs",
+        "line": 58
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowLabel.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Flow/FlowCollider.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.Flow/FlowColliderManager.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.Flow/FlowPrefabManager.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.Flow/FlowPrefabSet.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.UI/DragDropManager.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Behaviour.UI/IDragDropTarget.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Behaviour.UI/ActiveTextField.cs",
+        "line": 11
+      }
+    ]
+  },
+  {
+    "id": "pipe-editing-and-port-inspection",
+    "title": "Pipes, waypoints, and port inspection",
+    "category": "Reference",
+    "summary": "Connect, reroute, disconnect, and inspect the items inside production lines.",
+    "sections": [
+      {
+        "title": "Connections",
+        "paragraphs": [
+          "Left click or drag a port to begin a connection; finish at a port of the opposite direction. Existing connections on either endpoint are disconnected before the new link is made. Starting from an already connected input reroutes from that pipe’s output. Starting from a connected output clears its waypoints first. Right click a connected port to disconnect it."
+        ]
+      },
+      {
+        "title": "Waypoints",
+        "paragraphs": [
+          "While routing a pipe, Ctrl-click empty space to add a waypoint and continue drawing. Waypoints can be clicked/dragged, snapped to an offset grid, or positioned freely with Ctrl. Right click a waypoint removes it. Canceling a waypoint move restores its old coordinate. Pipe rendering and collider geometry follow all waypoints."
+        ]
+      },
+      {
+        "title": "Status colors",
+        "paragraphs": [
+          "A transferred item briefly flashes the pipe white; rejected items set it dark red; timeout flashes dark orange. Port artwork also switches to an error sprite when its connected pipe rejected an item. These are feedback signals from the pipe model."
+        ]
+      },
+      {
+        "title": "Inspect buffers",
+        "paragraphs": [
+          "Hover a port for its item icon preview and buffered count; when empty it can cycle among previewable accepted item types. Hold Shift while hovering for the full item tooltip. Shift-right-click a human item opens character details. Output ports normally buffer one item; FlowInput adds an item only when CanBuffer permits it."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowIO.cs",
+        "line": 70
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowPipe.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowPipeNode.cs",
+        "line": 31
+      },
+      {
+        "path": "Assets.Source.Flow/FlowInput.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Flow/FlowOutput.cs",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "id": "machine-stacks-upgrade-controls",
+    "title": "Machine stacks, mirrored ports, and upgrade slots",
+    "category": "Reference",
+    "summary": "Additional mouse gestures and how upgrade replacement charges and refunds work.",
+    "sections": [
+      {
+        "title": "Stack and mirror",
+        "paragraphs": [
+          "After element_stacking, Ctrl-left-click a stackable machine to add one copy, up to stack size 5. The game charges GetSingleCopyCost, updates upgrade effects and label, and shows the stack as layered backgrounds. It does not stack while deconstructing or when the pointer is on a Button or port. Alt-left-click flips Mirrored and rebuilds port positions and pipe lines."
+        ]
+      },
+      {
+        "title": "Picker",
+        "paragraphs": [
+          "Middle click after unlock_picker opens a configured purchase copy if affordable. Pointer travel exceeding 50 world units suppresses accidental clicks after panning."
+        ]
+      },
+      {
+        "title": "Upgrade slots",
+        "paragraphs": [
+          "Click a slot to see Remove plus available researched upgrades. Hover an option to see its effect at the relevant nth duplicate, its purchase cost, and any old-upgrade refund. Selecting a different type charges the new price and refunds the old upgrade; selecting Remove only refunds. Selecting the same upgrade type opens/closes the chooser without buying a second copy.",
+          "With easy_node_upgrade, Ctrl-clicking a slot asks the machine for its automatic recommended upgrade and attempts to buy that. Progress bars show current crafting and productivity; the full-output warning appears after completed progress remains blocked for more than 0.1 seconds."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowElement.cs",
+        "line": 116
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowUpgrade.cs",
+        "line": 37
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowUpgradeOption.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.Flow/CraftButtonWarning.cs",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "id": "decoration-labels-stickers",
+    "title": "Decorations, labels, colors, and stickers",
+    "category": "Reference",
+    "summary": "Buying and editing layout decorations and their exact base prices.",
+    "sections": [
+      {
+        "title": "Types and costs",
+        "paragraphs": [],
+        "table": {
+          "headers": [
+            "Decoration",
+            "Raw Currency.Gold units",
+            "Initial size"
+          ],
+          "rows": [
+            [
+              "Container",
+              "500 = 5 silver",
+              "128×128"
+            ],
+            [
+              "Label",
+              "300 = 3 silver",
+              "192×64"
+            ],
+            [
+              "Icon sticker",
+              "400 = 4 silver",
+              "128×128"
+            ]
+          ]
+        }
+      },
+      {
+        "title": "Editing containers and labels",
+        "paragraphs": [
+          "Decoration research exposes containers; deco_label and deco_sticker expose their additional rows. The options popup edits style index, lock state, anchor/parent state, and label text. Style choices select one of the prefab’s background-color sprites; this code does not expose an arbitrary RGB color picker. Labels resize to preferred text width+96 and height+32. Enter ends label editing and closes the popup."
+        ]
+      },
+      {
+        "title": "Stickers",
+        "paragraphs": [
+          "A sticker selects an icon from item, technology, and currency icon names. Search uses a case-insensitive name substring. Size is a slider integer multiplied by 64, keeping a square footprint. Selecting an icon changes it immediately; double clicking an icon also saves/closes. Stickers use alpha hit-testing so transparent pixels are not the full clickable rectangle."
+        ]
+      },
+      {
+        "title": "Persistence and copy",
+        "paragraphs": [
+          "FlowDeco saves position, size, style, optional sticker data, label, lock and parent flags. IconSticker saves IconName and uses the standard sticker cost. CreateCopy copies style/size/label/parent/sticker, but does not copy Locked in this implementation. Sticker factories reconstruct the subtype from its saved Type."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Deco/DecoBuyMenu.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Behaviour.UI.Deco/DecoBuyMenuRow.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.UI.Deco/DecoOptionsPopup.cs",
+        "line": 35
+      },
+      {
+        "path": "Assets.Behaviour.UI.Deco/DecoOptionsStyle.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.UI.Deco/StickerOptionsPopup.cs",
+        "line": 40
+      },
+      {
+        "path": "Assets.Source.Flow/FlowDeco.cs",
+        "line": 52
+      },
+      {
+        "path": "Assets.Source.Flow/DecoSticker.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Flow.Stickers/IconSticker.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/FlowOptionsIcon.cs",
+        "line": 18
+      },
+      {
+        "path": "SpriteLibrary.cs",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "id": "container-moving-and-resizing",
+    "title": "Container anchors, resizing, and group movement",
+    "category": "Reference",
+    "summary": "How decorated areas collect machines, labels, and pipe waypoints.",
+    "sections": [
+      {
+        "title": "Anchored parts",
+        "paragraphs": [
+          "An IsParent decoration gathers overlapping machines, decorations, and pipe waypoints. It recursively follows parent decorations, deduplicates machines/decorations, and normally excludes other containers unless requested. Turning Anchor off makes the decoration move alone. Labels can be parents too."
+        ]
+      },
+      {
+        "title": "Move and resize",
+        "paragraphs": [
+          "Use the move handle to pick up a parent and its anchored parts. Ctrl bypasses the layout grid. On drop, any overlapping anchored machine causes the complete group to revert. Cancel also reverts unless the group has crossed to another workflow. Resize from a corner; minimum width and height are 64. Cancel restores old position and size."
+        ]
+      },
+      {
+        "title": "Move between workflows",
+        "paragraphs": [
+          "A group transfer retains pipes with both endpoints in the moved machine set and transfers their waypoints; crossing-boundary connections are disconnected. Decorations and anchored pipe nodes move with it. The temporary parent used by area-move is destroyed afterward."
+        ]
+      },
+      {
+        "title": "Lock and clone",
+        "paragraphs": [
+          "Lock hides normal move/edit/resize controls and exposes an unlock control. At far zoom levels the edit button is hidden and move handles scale up. Middle click copies an affordable decorated group after container_clone. Clicking a parent label can locate the overlapping container for that clone action."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowDeco.cs",
+        "line": 69
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowDecoEdit.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowDecoMover.cs",
+        "line": 39
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowDecoResizer.cs",
+        "line": 30
+      }
+    ]
+  },
+  {
+    "id": "deconstruction-and-refunds",
+    "title": "Deconstruction and refunds",
+    "category": "Reference",
+    "summary": "Remove machines, decoration groups, pipes, and waypoints.",
+    "sections": [
+      {
+        "title": "Pointer target determines the action",
+        "paragraphs": [
+          "In deconstruct mode, releasing the left button removes the target. A connected port takes precedence over its machine and disconnects its pipe. A pipe waypoint removes only that waypoint. A machine removes that machine; a decoration removes the decoration. The displayed refund refreshes roughly every 0.1 seconds."
+        ]
+      },
+      {
+        "title": "Shift removes anchored contents",
+        "paragraphs": [
+          "Holding Shift while deconstructing a parent decoration also removes its anchored machines and decorations. The decoration refund path adds machine refunds when anchored contents are included. Without Shift the contents remain. Decorations refund half their own purchase cost. Refunds are not income for earned-Gold statistics."
+        ]
+      },
+      {
+        "title": "Preview before dropping",
+        "paragraphs": [
+          "The overlay shows the available refund collection. It does not refund a whole machine merely for disconnecting a port. Moving groups and individual machine drags have separate collision/cancel behavior; they are not purchases unless a copy blueprint is used."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.HUD/DeconstructOverlay.cs",
+        "line": 26
+      },
+      {
+        "path": "Assets.Source.Flow/FlowDeco.cs",
+        "line": 52
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowPipeNode.cs",
+        "line": 31
+      }
+    ]
+  },
+  {
+    "id": "buy-menu-and-recipe-selection",
+    "title": "Build menu and recipe selection",
+    "category": "Reference",
+    "summary": "Categories, search, selected recipes, ingredient previews, and changing machine configuration.",
+    "sections": [
+      {
+        "title": "Build categories and search",
+        "paragraphs": [
+          "The build menu lists buildable machine types under category tabs. Empty categories are gray and cannot be selected. Search hides the tabs and matches all typed words, case-insensitively, against translated label or description. Blank search produces no result list in this implementation."
+        ]
+      },
+      {
+        "title": "Recipe selection",
+        "paragraphs": [
+          "The current recipe is shown first above a spacer, followed by the other recipes available to that machine. Search matches every nonempty word against recipe name or description. Changing machine type resets the search state. Each recipe row shows reagent icons/counts and direct currency crafting costs; hovering shows equipment slot, description and detailed recipe results."
+        ]
+      },
+      {
+        "title": "Changing a recipe",
+        "paragraphs": [
+          "Selection clears and rebuilds the machine’s IO and refreshes its label/icon. The adapter attempts to reconnect old pipes by matching port indices that still exist. Input-side reconnections retain their old waypoints; output-side reconstruction does not explicitly copy them. Do not assume changing recipes preserves the meaning of each indexed ingredient connection."
+        ]
+      },
+      {
+        "title": "Tutorial behavior",
+        "paragraphs": [
+          "Recipe selection is blocked during the initial blackout. New machine and recipe adapters often open a configuration popup one frame after placement. Several ReopenBuyMenu properties are recorded but their selection callbacks only discard the value, so they are not a reliable promise that every configuration returns to the build menu."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.BuyMenu/BuyMenuTab.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.UI.BuyMenu/ElementBuyMenu.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Behaviour.UI.SelectRecipe/SelectRecipePopup.cs",
+        "line": 36
+      },
+      {
+        "path": "Assets.Behaviour.UI.SelectRecipe/SelectRecipeRow.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowRecipe.cs",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "id": "item-encyclopedia",
+    "title": "The in-game item encyclopedia",
+    "category": "Reference",
+    "summary": "Find an item’s sources, recipes, and configured machine shortcuts.",
+    "sections": [
+      {
+        "title": "Unlock-aware item list",
+        "paragraphs": [
+          "ItemMenu builds rows from ItemType.Unlocked. Clicking expands a row; expanding another collapses the previous row. Search requires all words in the translated item name, case-insensitively. It searches names rather than every recipe description."
+        ]
+      },
+      {
+        "title": "Sources and uses",
+        "paragraphs": [
+          "An expanded row lists item description, crafting recipes producing it, resource suppliers, Forest, source quests/dungeons, training, or Arena where applicable. A second list shows recipes that consume it. Empty categories show a no-source/no-recipe message. Source lists are populated lazily when first expanded."
+        ]
+      },
+      {
+        "title": "Build directly from a source",
+        "paragraphs": [
+          "Click or drag an available source entry to buy a machine preconfigured for that recipe/resource/quest/dungeon. Affordability is checked before the purchase ghost opens. Locked entries display their research requirement if available, otherwise a generic locked label. An item appearing in the encyclopedia does not grant every recipe that uses it."
+        ]
+      },
+      {
+        "title": "Implementation detail affecting expectations",
+        "paragraphs": [
+          "ItemMenu keeps built rows and toggles their visibility during search. Blank active search returns early, rather than explicitly restoring every row; turning search off calls ShowAll. Recipe availability and dungeon unlock sets independently control whether a source can be placed."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.ItemList/ItemMenu.cs",
+        "line": 34
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemList/ItemMenuRow.cs",
+        "line": 57
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemList/ItemMenuRecipe.cs",
+        "line": 39
+      }
+    ]
+  },
+  {
+    "id": "resource-panel-controls",
+    "title": "Resource quotas and supplier configuration",
+    "category": "Reference",
+    "summary": "Read resource demand and buy capacity without confusing it with item inventory.",
+    "sections": [
+      {
+        "title": "Quota panel",
+        "paragraphs": [
+          "ResourcesMenu lists available resources except Farm resources and AdventureSupplies. Each row refreshes available capacity and demand, highlights demand red above supply, and offers the next quota increase at GamePlayer.GetResourceUpgrade’s current cost. Buying spends that collection and adds the quota with isUpgrade=true."
+        ]
+      },
+      {
+        "title": "Supplier choice",
+        "paragraphs": [
+          "The selector shows the machine’s current resource first, then other resources available for its supply tag. Resource demand is live; available capacity is shown explicitly below 5000. Selection clears/rebuilds that resource machine’s IO and refreshes its label/icon."
+        ]
+      },
+      {
+        "title": "Costs and output warnings",
+        "paragraphs": [
+          "Hover a resource for its description and per-resource collection cost where applicable. The world adapter shows queue count only above 1, hides it when Output Full is displayed, and marks blocked output when OutputPerSecond is zero. Capacity and demand are rate/quota information, not a count of loose items waiting in storage."
+        ]
+      },
+      {
+        "title": "Shortcut",
+        "paragraphs": [
+          "The resource-window shortcut is visible only after unlock_supply_window and is omitted for Farm and AdventureSupplies."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Resources/ResourcesMenu.cs",
+        "line": 16
+      },
+      {
+        "path": "Assets.Behaviour.UI.Resources/ResourceQuotaRow.cs",
+        "line": 37
+      },
+      {
+        "path": "Assets.Behaviour.UI.Resources/SelectResourcePopup.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.UI.Resources/SelectResourceRow.cs",
+        "line": 34
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowResource.cs",
+        "line": 37
+      }
+    ]
+  },
+  {
+    "id": "forest-panel-controls",
+    "title": "Forest crew and harvest controls",
+    "category": "Reference",
+    "summary": "Assign workers, hire more crew, compare utilization, and select harvest outputs.",
+    "sections": [
+      {
+        "title": "Hiring and assigning",
+        "paragraphs": [
+          "Hire Crew buys one unassigned worker at NextWorkerCost. A role’s + button assigns one unassigned worker; Ctrl assigns all unassigned workers. When none remain, + instead attempts to buy and assign one. The − button removes one worker; Ctrl removes the full role allocation. Subtract is disabled at zero."
+        ]
+      },
+      {
+        "title": "Utilization and blocking",
+        "paragraphs": [
+          "Role tabs show utilization every 0.2 seconds and color it red above 100%. The menu and resource selector show the global blocked state. Animated work scenes are hidden when blocked or when that role has no workers. Tooltips list each role’s harvest items and WorkersPerItem."
+        ]
+      },
+      {
+        "title": "Choosing a Forest output",
+        "paragraphs": [
+          "The selector groups resources by worker role and remembers the last category. It shows the currently selected resource first if it belongs to that category. Rows show description and harvest costs. Selecting another resource rebuilds the Forest machine’s IO. Its world tooltip includes quality, maximum output, harvest cost and role utilization."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Forest/ForestCrewAddButton.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Behaviour.UI.Forest/ForestCrewMenu.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.UI.Forest/ForestCrewTab.cs",
+        "line": 48
+      },
+      {
+        "path": "Assets.Behaviour.UI.Forest/SelectForestHeader.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Behaviour.UI.Forest/SelectForestResourcePopup.cs",
+        "line": 44
+      },
+      {
+        "path": "Assets.Behaviour.UI.Forest/SelectForestResourceRow.cs",
+        "line": 32
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowForest.cs",
+        "line": 34
+      },
+      {
+        "path": "Assets.Source.Player/ForestWorkerExtensions.cs",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "id": "farm-panel-controls",
+    "title": "Farm plots and planting controls",
+    "category": "Reference",
+    "summary": "Paint crops/animals, clear plots, copy a plot choice, and expand the field.",
+    "sections": [
+      {
+        "title": "Paint and clear",
+        "paragraphs": [
+          "Click or drag a resource from the Farm list to pick up its ghost. Dropping on a plot sets that resource and keeps the ghost active for repeated planting. Dropping elsewhere cancels. Right click a plot with no planting ghost clears it; middle click a populated plot picks its resource for reuse. Closing Farm cancels the drag."
+        ]
+      },
+      {
+        "title": "Expansion",
+        "paragraphs": [
+          "The panel creates each plot at 58-pixel spacing. A right-edge expansion adds a column while Width<6; bottom expansion adds a row. Buying uses GetPlotCost(numberOfNewPlots), enlarges field size, and rebuilds the panel. Width is capped in this interface by hiding column extensions at six; no equivalent height cap is visible in FarmMenu."
+        ]
+      },
+      {
+        "title": "Read yield and demand",
+        "paragraphs": [
+          "Resource tooltips show description and PlotYield. The list compares demand/available quota, displays nonzero utilization as a percentage, and turns it red above 100%. Plot background details are deterministic from plot coordinates and a FarmMenuPlot seed; they are decorative, not differing soil statistics."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Farm/FarmMenu.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Behaviour.UI.Farm/FarmMenuExtension.cs",
+        "line": 22
+      },
+      {
+        "path": "Assets.Behaviour.UI.Farm/FarmMenuGhost.cs",
+        "line": 17
+      },
+      {
+        "path": "Assets.Behaviour.UI.Farm/FarmMenuItem.cs",
+        "line": 31
+      },
+      {
+        "path": "Assets.Behaviour.UI.Farm/FarmMenuPlot.cs",
+        "line": 32
+      },
+      {
+        "path": "Assets.Source.Items.Type/FarmItemType.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Items.Type/ForestItemType.cs",
+        "line": 19
+      }
+    ]
+  },
+  {
+    "id": "routing-filter-appraiser-accountant",
+    "title": "Filters, Appraisers, and Accountants",
+    "category": "Reference",
+    "summary": "Choose exact item filters, stat comparisons, and balance-based gates.",
+    "sections": [
+      {
+        "title": "Filter",
+        "paragraphs": [
+          "Filter’s selector lists unlocked item types. Search matches all words against translated item names. Selecting an item changes its icon and closes the popup. Filter sends exact matching ItemType to output index 0 and other items to index 1. A full chosen output stalls the item instead of using the other output."
+        ]
+      },
+      {
+        "title": "Appraiser",
+        "paragraphs": [
+          "Choose a stat, comparison operator, and integer amount. Operators are ==, !=, <, <=, >, and >=. Current Health, Current Energy, Quality, and Training are marked as percentages; other stats use their numeric units. No selected stat passes every item. True goes to output 0, false to output 1; routing waits when the selected output is full."
+        ]
+      },
+      {
+        "title": "Accountant",
+        "paragraphs": [
+          "Choose a currency, operator and whole-number threshold to open/close a single output. It compares the kingdom balance, not the passing item value. No currency selected passes everything. Gold comparison uses balance/10000, i.e. whole displayed gold coins, whereas other currencies use whole currency units."
+        ]
+      },
+      {
+        "title": "Applying settings",
+        "paragraphs": [
+          "Enter or numpad Enter submits Appraiser/Accountant edits. Empty amount text becomes zero. Applying updates model, icon and displayed threshold and closes the popup. Appraiser current-health/current-energy values are rounded percentages of combatant maximums."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.ItemFilter/ItemFilterCell.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemFilter/ItemFilterPopup.cs",
+        "line": 32
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemAppraiser/ItemAppraiserPopup.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemAppraiser/ItemAppraiserStatOption.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemAppraiser/AccountantPopup.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowAppraiser.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowAccountant.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowFilter.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Source.Items/AppraiserStatExtensions.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Items.Type/CombatantItemType.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Appraiser.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Accountant.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Source.Flow.Elements/Filter.cs",
+        "line": 25
+      }
+    ]
+  },
+  {
+    "id": "storage-panel-controls",
+    "title": "Armory and Portal configuration",
+    "category": "Reference",
+    "summary": "Input/output modes, eight colors, numbered subchannels, and shared inventories.",
+    "sections": [
+      {
+        "title": "Armory",
+        "paragraphs": [
+          "The popup has eight color channels. Channel selectors are hidden unless the machine’s ChannelTech is owned. Choose the Input row to store items, or an available compatible item type to output it. Available output types are sorted by item ordinal; rows show stored count and peek-item tooltips."
+        ]
+      },
+      {
+        "title": "Safe mode switching behavior",
+        "paragraphs": [
+          "Switching from output to input clears outputs; switching from input to output clears inputs. Changing an output type returns the currently connected pipe’s input/output buffers to the Armory channel and clears those buffers before reconfiguring the output. Changing channels refreshes colors and item choices."
+        ]
+      },
+      {
+        "title": "Portal",
+        "paragraphs": [
+          "The Portal popup always builds eight color choices and eight numbered index choices. Numbered indices are shown after portal_unlock_channels; the labels are 1–8 while storage uses indices 0–7. Choose Input or Output to set its direction. Changing an output Portal’s color or index first clears its output. Index contents refresh about every 0.2 seconds."
+        ]
+      },
+      {
+        "title": "Find linked stores",
+        "paragraphs": [
+          "World Armory and Portal adapters show channel colors and live item/count information. Their cycle action finds the next related machine and calls ShowElement, allowing navigation to another linked storage endpoint. Empty stores have no fabricated item tooltip."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.ItemStore/ArmoryChannelSelect.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemStore/ArmoryItemRow.cs",
+        "line": 32
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemStore/ArmoryPopup.cs",
+        "line": 52
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemStore/PortalIndexSelect.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.UI.ItemStore/PortalPopup.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowArmory.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowPortal.cs",
+        "line": 46
+      }
+    ]
+  },
+  {
+    "id": "quest-panel-controls",
+    "title": "Quest Board panel controls",
+    "category": "Reference",
+    "summary": "Expand and accept quests, preview challenges, and read repeat rewards and party status.",
+    "sections": [
+      {
+        "title": "Choose or inspect",
+        "paragraphs": [
+          "The Quest popup lists unlocked quests. The board’s current quest is marked, expanded, and moved to the top. Clicking a different collapsed row expands its description/challenges/rewards; the Accept button actually assigns it, updates the board IO, and closes the popup. Merely expanding does not accept."
+        ]
+      },
+      {
+        "title": "Live details",
+        "paragraphs": [
+          "Difficulty, challenge icons and party contents are shown. Progress is refreshed roughly once per second; no tick progress hides the progress bar. Reward rows are rebuilt when completed count changes using GetRewards(completedCount), so first-clear and repeat rewards can differ. Completed-count text distinguishes never completed from repeated clears."
+        ]
+      },
+      {
+        "title": "Tooltips and party",
+        "paragraphs": [
+          "Hover challenge icons for full challenge content; challenge rows show their description. Reward tooltips appear only if the reward supplies a TooltipTitle. Right-clicking a human in the party opens details and can return to this popup on closing. QuestBoardPopup refuses normal Cancel while a tooltip is active."
+        ]
+      },
+      {
+        "title": "World presentation",
+        "paragraphs": [
+          "The world board selects a quest-specific background and character positions where supplied, otherwise its default art/layout. Adding adventurers fills visible slots; quest completion clears their sprites. These UI placements are not extra party members or combat bonuses."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Quests/QuestBoardPopup.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Behaviour.UI.Quests/QuestBoardRow.cs",
+        "line": 83
+      },
+      {
+        "path": "Assets.Behaviour.UI.Quests/QuestChallengeIcon.cs",
+        "line": 16
+      },
+      {
+        "path": "Assets.Behaviour.UI.Quests/QuestChallengeRow.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.UI.Quests/QuestRewardRow.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowQuestBoard.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/QuestBackground.cs",
+        "line": 8
+      }
+    ]
+  },
+  {
+    "id": "dungeon-panel-controls",
+    "title": "Dungeon selection and expedition display",
+    "category": "Reference",
+    "summary": "Inspect stages, boss health, wipe counts, parties, and retreat controls.",
+    "sections": [
+      {
+        "title": "Select a dungeon",
+        "paragraphs": [
+          "The selection popup lists DungeonType.Unlocked, not every dungeon defined in code. Rows show icon, description and TotalSupplyCost, which includes nightmare scaling where applicable. Left click assigns it to the world machine; Inspect opens the detailed dungeon panel instead."
+        ]
+      },
+      {
+        "title": "Dungeon tabs and stage nodes",
+        "paragraphs": [
+          "Detailed panels create tabs for unlocked dungeons, split after three tabs. Clicking a progress node selects a visible stage for inspection; it does not move the expedition to that stage. Each stage displays its difficulty, challenges, rewards, completion count and wipe count. A cleared-stage label appears when current stage is later."
+        ]
+      },
+      {
+        "title": "Active versus inspected stage",
+        "paragraphs": [
+          "The party is displayed on the active stage, sorted by DistanceRank. Other inspected stages hide party sprites. Active trash stages show walking and scrolling backgrounds; active bosses show fighting and boss-health progress; a finished stage is idle. The progress tracker follows the current expedition, even when another stage is being inspected."
+        ]
+      },
+      {
+        "title": "Retreat and status",
+        "paragraphs": [
+          "Retreat is offered while the party has members and calls DungeonProgress.DoRetreat. Empty parties show Waiting to Start. StatusText, stage counters and party indicators update frequently. Companion trait art can appear beside an adventurer without creating another combatant entry. Challenge badges indicate success and fade; boss hit/death colors are visual feedback."
+        ]
+      },
+      {
+        "title": "Presentation data",
+        "paragraphs": [
+          "WorldDungeonSprite pairs IDs with machine backgrounds; DungeonScrollingBackground pairs IDs with a default and optional per-stage background. Scrolling uses tiled images and only runs during an active trash fight. These structures contain art selections rather than hidden rewards."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenu.cs",
+        "line": 125
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenuAdventurer.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenuBackgroundScroll.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenuBoss.cs",
+        "line": 26
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenuProgressNode.cs",
+        "line": 24
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonMenuTab.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/DungeonScrollingBackground.cs",
+        "line": 8
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/SelectDungeonPopup.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.UI.Dungeon/SelectDungeonRow.cs",
+        "line": 39
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowDungeon.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldDungeonSprite.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonType.cs",
+        "line": 81
+      },
+      {
+        "path": "Assets.Source.Adventure/DungeonMetadata.cs",
+        "line": 13
+      }
+    ]
+  },
+  {
+    "id": "war-panel-controls",
+    "title": "War selection and status panels",
+    "category": "Reference",
+    "summary": "Choose a campaign, read progress trends, inspect stage rewards, and examine soldiers.",
+    "sections": [
+      {
+        "title": "Campaign choice",
+        "paragraphs": [
+          "The machine popup lists wars already present in GamePlayer.Wars. Select assigns the machine’s WarType; Inspect opens the campaign panel. Rows refresh current stage and stage progress. A completed North campaign has its own status wording. The world machine opens its selector if no campaign is set, otherwise its details."
+        ]
+      },
+      {
+        "title": "Status colors",
+        "paragraphs": [
+          "The war panel creates tabs for available wars, stage nodes and a progress strip. Blocked progression is red with ProgressBlockedReason. Tracker above 2 is green, below 2 red, and exactly 2 neutral blue. After the final stage, a complete status replaces the current-stage line."
+        ]
+      },
+      {
+        "title": "Stage rewards",
+        "paragraphs": [
+          "Hover a stage node for description and reward text. Secured stages show RewardComplete; others show the prospective RewardDescription. Stage icons become colored when HasWarStage reports them secured. Terrain and enemy artwork are selected from campaign data."
+        ]
+      },
+      {
+        "title": "Soldiers",
+        "paragraphs": [
+          "The soldier panel shows at most its MaxCount (default 10), plus an overflow count; this is a display limit rather than an army cap. Sprites show weapon and health. Tooltips warn humans lacking weapons and combatants lacking armor. Right click a human for details and return to the war panel on closing. Health gains flash green, losses pale red; death/exhaustion fades the portrait."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/SelectWarEffortPopup.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/SelectWarEffortRow.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/SelectWarEffortTooltip.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortMenu.cs",
+        "line": 68
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortMenuNode.cs",
+        "line": 24
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortMenuTab.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortSoldierContainer.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortSoldierSprite.cs",
+        "line": 50
+      },
+      {
+        "path": "Assets.Behaviour.UI.WarEffort/WarEffortTerrainType.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowWarEffort.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowWarEffortConscript.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowWarEffortSprite.cs",
+        "line": 7
+      },
+      {
+        "path": "Assets.Source.Adventure/WarType.cs",
+        "line": 63
+      },
+      {
+        "path": "Assets.Source.Adventure/WarStage.cs",
+        "line": 7
+      }
+    ]
+  },
+  {
+    "id": "character-and-training-displays",
+    "title": "Character, training, recovery, and Arena displays",
+    "category": "Reference",
+    "summary": "Inspect equipped humans and interpret training slots, outfitting and fight-state indicators.",
+    "sections": [
+      {
+        "title": "Human details",
+        "paragraphs": [
+          "Character details show the seeded personal name, displayed level (internal Level+1), class/item name, quality, health, energy, combat power, four main stats, equipment, traits and advancement options. Empty equipment slots show a gray slot label/icon and no item tooltip; filled slots show their full item. Armor tooltip calculates damage reduction rather than merely repeating the armor number."
+        ]
+      },
+      {
+        "title": "Advancement visibility",
+        "paragraphs": [
+          "The panel marks available advancement options and shows a locked state until TrainingGrounds.SpecUnlock. Available markers reflect each advancement’s predicate; these small UI components provide descriptions/availability rather than a manual purchase button. Traits and advancement lists rebuild when their source list changes."
+        ]
+      },
+      {
+        "title": "Training and Inn slots",
+        "paragraphs": [
+          "Training slot portraits show progress, current human, and a transformation animation when its icon changes. Inn reuses this widget for five slots, including any current food icon. Right click a human in a slot opens details. Empty slots disable item tooltips; spawn/leave/evolve animations are presentation."
+        ]
+      },
+      {
+        "title": "Outfitter",
+        "paragraphs": [
+          "Manual outfitting button queues an action once; automated mode shows a progress bar instead. Inspect opens the current or last human. After outfitter_timeout, the timeout popup sets seconds in half-second steps (slider/2); zero is labeled None. Releasing the slider commits/closes the popup."
+        ]
+      },
+      {
+        "title": "Arena",
+        "paragraphs": [
+          "Arena displays two combatants, their health and fighting/idle animations. War blocking replaces both slots with blocked artwork. Manual fight button appears only when manual crafting is possible and automation is off. Output Full indicates blocked production. Right click a human slot to inspect it."
+        ]
+      },
+      {
+        "title": "Power and equipment terminology",
+        "paragraphs": [
+          "Weapon slot wording distinguishes two-handed, ambidextrous one-handed, and fixed-slot weapons. Armor/slot/stat extension methods supply localized names. Combatant tooltips show live health, quality above baseline, armor, combat power and description."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.Human/HumanDetailsPopup.cs",
+        "line": 89
+      },
+      {
+        "path": "Assets.Behaviour.UI.Human/HumanDetailsAdvancement.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.UI.Human/HumanDetailsArmor.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI.Human/HumanDetailsItemSlot.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.UI.Human/HumanDetailsPower.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowTrainingGrounds.cs",
+        "line": 34
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowTrainingGroundsSlot.cs",
+        "line": 59
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowInn.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowOutfitter.cs",
+        "line": 56
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowArena.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowArenaSlot.cs",
+        "line": 25
+      },
+      {
+        "path": "Assets.Behaviour.Flow/WorldFlowCombatant.cs",
+        "line": 40
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerAdvancement.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Adventure/AdventurerArchetypeExtensions.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Items.Type/AdventurerItemType.cs",
+        "line": 40
+      },
+      {
+        "path": "Assets.Source.Items.Type/WeaponItemType.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Source.Items/ArmorTypeExtensions.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Items/EquipmentSlotExtensions.cs",
+        "line": 5
+      },
+      {
+        "path": "Assets.Source.Items/EquipStatExtensions.cs",
+        "line": 5
+      }
+    ]
+  },
+  {
+    "id": "production-status-and-controls",
+    "title": "Production status, routing buttons, and recent results",
+    "category": "Reference",
+    "summary": "Read sales, refinery results, buffers, and the small controls built into machines.",
+    "sections": [
+      {
+        "title": "Sales and disenchanting",
+        "paragraphs": [
+          "Shop shows collected Gold capped by MaxGold and a recent-sales tooltip with item quality and received value. Restaurant and Luxury Shop show Gold plus Crowns; Mercenary Guild shows Gold plus Ducats. Empty histories say no recent sales. Quality above baseline is green and below baseline red.",
+          "Disenchanter shows collected Mana and recent items with failure explanations: quality below 1.04, no enhancement, or both. The tooltip lists each item’s ManaValue."
+        ]
+      },
+      {
+        "title": "Refiner and Inspector",
+        "paragraphs": [
+          "Refiner tooltip reports the last item, original/new quality, destruction when new quality is zero, and Mana spent. With refiner_mana, its control toggles Mana use. Inspector blinks when its last item changes, refreshes full item details, and opens human details from live item or the last item. Incinerator shows a fading red-tinted icon when it consumes a new last item."
+        ]
+      },
+      {
+        "title": "Collector, Distributor, Manifold",
+        "paragraphs": [
+          "Their small plus control adds ports until four, then becomes a collapse control. Collector and Manifold add inputs; Distributor adds outputs. Despite its UI method name AddOutputSlot, Manifold’s adapter calls AddInputSlot. Hovering shows the last passing item when one exists."
+        ]
+      },
+      {
+        "title": "Track switch",
+        "paragraphs": [
+          "Left click toggles SwitchPosition. Hover changes switch artwork; a missing secondary connection can gray its image. The switch’s routes and production model remain separate from the tooltip/animation adapter."
+        ]
+      },
+      {
+        "title": "Requisition Office",
+        "paragraphs": [
+          "Its world display shows accumulated Requisition. Selecting a contract changes the shared index used by that office. Reroll costs currency and replaces that index across the kingdom; every placed office using the index updates its input. Reroll control is hidden before requisition_office_reroll. Conversion text is contract.BaseValue divided by Requisition reference value."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowShop.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowRestaurant.cs",
+        "line": 28
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowLuxuryShop.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowMercenaryGuild.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowDisenchanter.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowRefiner.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowInspector.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowIncinerator.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowCollector.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowDistributor.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowManifold.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowTrackSwitch.cs",
+        "line": 30
+      },
+      {
+        "path": "Assets.Behaviour.Flow.Elements/WorldFlowReqOffice.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.UI.Requisition/SelectReqContractPopup.cs",
+        "line": 22
+      },
+      {
+        "path": "Assets.Behaviour.UI.Requisition/SelectRequisitionReroll.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Behaviour.UI.Requisition/SelectRequisitionRow.cs",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "id": "workflow-tabs-and-labels",
+    "title": "Workflow tabs, names, icons, and ordering",
+    "category": "Reference",
+    "summary": "Switch diagrams, buy additional diagrams, rename them, and swap their positions.",
+    "sections": [
+      {
+        "title": "Switch and reorder",
+        "paragraphs": [
+          "Left click another workflow tab to switch. Ctrl-left-click another tab swaps its position with the currently active workflow, updating indices and selection. Right click opens its name/icon options. First ten workflows show the corresponding configurable numeric hotkey when its label fits."
+        ]
+      },
+      {
+        "title": "Scroll and overflow",
+        "paragraphs": [
+          "Mouse wheel over the workflow bar cycles the current diagram with wraparound. Left/right overflow buttons move the visible tab window. Available width depends on screen width and UI scale and caps at ten buttons, including the Add button. Hover slides the tab bar into view; an open options popup postpones that motion."
+        ]
+      },
+      {
+        "title": "Names and icons",
+        "paragraphs": [
+          "Type a label in options; PopupClosed writes it to the workflow. Icon selection applies immediately and refreshes the bar. Search matches icon names case-insensitively, using icons from items, nondeveloper technologies and currencies. Enter saves/closes; double click an icon selects it and saves."
+        ]
+      },
+      {
+        "title": "Buy a workflow",
+        "paragraphs": [
+          "The Add button shows GetExtraWorkflowCost in its tooltip. Buying spends it, appends a new FlowDiagram, refreshes tabs, and immediately switches to the new one. All workflows still simulate through GamePlayer.Update when not selected."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/FlowOptionsIcon.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/FlowOptionsPopup.cs",
+        "line": 35
+      },
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/SwapFlowAddButton.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/SwapFlowItem.cs",
+        "line": 33
+      },
+      {
+        "path": "Assets.Behaviour.UI.SwapFlow/SwapFlowMenu.cs",
+        "line": 46
+      },
+      {
+        "path": "SpriteLibrary.cs",
+        "line": 21
+      }
+    ]
+  },
+  {
+    "id": "research-interface",
+    "title": "Research tree and list interface",
+    "category": "Reference",
+    "summary": "Navigate branches, locate technologies, and distinguish visible clues from purchasable nodes.",
+    "sections": [
+      {
+        "title": "Tree navigation",
+        "paragraphs": [
+          "Opening research shows the global tree; selecting an owned root opens its child branch. Clicking the same root again returns global. The War branch also displays War-type nodes and the Dungeon branch Dungeon-type nodes. Hidden technologies are filtered out. Camera position and zoom are saved on the player."
+        ]
+      },
+      {
+        "title": "Availability cues",
+        "paragraphs": [
+          "Available nodes show price, glow and purchase behavior. Locked nodes use unknown/gray states; a node’s identity may appear when an adjacent prerequisite is available or purchased. Custom unmet requirements are appended in red. Owned roots show counts of currently available children and a new-tech indicator based on the last seen count."
+        ]
+      },
+      {
+        "title": "Research list",
+        "paragraphs": [
+          "global_tech_upgrade exposes the list button. The list groups available roots, available children, locked nodes, and purchased nodes. Left click buys an available row after affordability check; right click an unlocked row focuses that node in its branch. The inspected implementation appends purchased nodes through two loops, so duplicate purchased rows can appear."
+        ]
+      },
+      {
+        "title": "Exit behavior and dormant code",
+        "paragraphs": [
+          "Escape closes list first, then a branch, then research. Cancel can return from a branch if the pointer was not dragged far; right-clicking a list row is reserved for locate. UIElementTechNode contains child-purchase helper code, but _childPurchaseActive always returns false in this inspected build, so that shortcut is dormant."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.TechTree/TechTreeListItem.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Behaviour.UI.TechTree/TechTreeListView.cs",
+        "line": 29
+      },
+      {
+        "path": "Assets.Behaviour.UI.TechTree/TechTreeMenu.cs",
+        "line": 68
+      },
+      {
+        "path": "Assets.Behaviour.UI.TechTree/UIElementTechNode.cs",
+        "line": 61
+      },
+      {
+        "path": "Materials.cs",
+        "line": 27
+      }
+    ]
+  },
+  {
+    "id": "currency-hud-and-denominations",
+    "title": "Currency HUD and coin denominations",
+    "category": "Reference",
+    "summary": "Interpret raw Gold units, copper/silver/gold icons, affordability, and exchange clicks.",
+    "sections": [
+      {
+        "title": "One stored Gold unit is the smallest coin unit",
+        "paragraphs": [
+          "Currency.Gold is stored as an integer, but the UI splits it into denominations: copper=amount%100, silver=(amount/100)%100, gold=amount/10000. Thus 100 raw Gold units display as 1 silver and 10,000 as 1 gold. Source-derived numeric costs in raw collections must be converted before labeling them displayed gold coins."
+        ]
+      },
+      {
+        "title": "Compact HUD",
+        "paragraphs": [
+          "The currency pane refreshes about every 0.2 seconds. With fewer than four currency kinds it forces copper visible; below six it retains silver. More populated HUDs can hide small denominations to fit. Hovering while a tooltip is active postpones rebuilding the currency rows. Values in tooltips also use coin denominations and can omit copper when gold is present."
+        ]
+      },
+      {
+        "title": "Cost and value displays",
+        "paragraphs": [
+          "CurrencyDisplay can mark insufficient balances with a configured color and show No Cost for an empty collection. CurrencyDisplayLite presents machine income with a specialist currency beside coins. TooltipCost rebuilds its layout; TooltipValue presents a compact multi-currency value line."
+        ]
+      },
+      {
+        "title": "Exchange gesture",
+        "paragraphs": [
+          "After currency_exchange, left click a tradeable non-Gold currency cell to buy, right click to sell. Mana, Ingenuity and Faith display an exchange-disabled message. Hover shows the currency description. This shortcut applies to currency cells carrying their tooltip/component, not arbitrary artwork shaped like coins."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Behaviour.UI.HUD/CurrencyPane.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/CurrencyCell.cs",
+        "line": 26
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/CurrencyDisplay.cs",
+        "line": 43
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/CurrencyDisplayLite.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Behaviour.UI.Tooltip/UITooltipCost.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Behaviour.UI.Tooltip/UITooltipValue.cs",
+        "line": 32
+      }
+    ]
+  },
+  {
+    "id": "tooltips-warnings-and-tutorial",
+    "title": "Tooltips, warnings, notifications, and tutorial cues",
+    "category": "Reference",
+    "summary": "How contextual details, text input, progress bars, and alert messages behave.",
+    "sections": [
+      {
+        "title": "Tooltips",
+        "paragraphs": [
+          "TooltipSource obtains title, body and custom content from its configured object or parent interfaces. Hover shows a tooltip only when the component is enabled and drag/drop is not busy. Exiting hides it or forwards to the newly hovered tooltip source. Tooltips follow the mouse, flip horizontally/vertically near screen edges and include text, item rows, prices, values, separators and progress bars."
+        ]
+      },
+      {
+        "title": "Live content and layout",
+        "paragraphs": [
+          "TinyProgressBar refreshes its callbacks every 0.5 seconds. ItemCountCell provides an item tooltip only for actual item entries; arbitrary icon/text cells disable it. TextContainer sizes itself to preferred text plus padding. FontFilteringSwitch selects point-font rendering when effective size rounds to 16, otherwise the filtered font; changes propagate separately to world and screen-space text."
+        ]
+      },
+      {
+        "title": "Warnings and status",
+        "paragraphs": [
+          "A disabled craft button reports Output Full when progress≥1, otherwise No Ingredients. Status notifications last five simulated seconds unless persistent, slide/fade in and fade out, and can invoke a click action. Persistent notifications expose a close control. General alerts support Okay or Yes/No with supplied callbacks and resize around localized message text."
+        ]
+      },
+      {
+        "title": "Input helpers",
+        "paragraphs": [
+          "Focused text fields repeatedly delay player input. HoverAction and RightClickAction invoke configured UI events, HoverHighlight toggles artwork, and DepressButton shifts button children down two pixels while pressed. UIBlocksZoom prevents world zoom while hovering registered menus/popups. These are presentation/input wrappers rather than extra game systems."
+        ]
+      },
+      {
+        "title": "Tutorial sequence",
+        "paragraphs": [
+          "Initial blackout prevents normal dragging and recipe selection. Dismissing it re-enables controls/UI and fades the overlay. Tutorial arrows direct construction, Mine upgrade slots, output-to-Forge connection, research and the Shop unlock. Opening the relevant crew/resource/build panel clears its cue. FinishTutorial disables the tutorial component; arrow blinking/motion is visual guidance."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Behaviour.UI/UITooltip.cs",
+        "line": 77
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/ITooltipCustomSource.cs",
+        "line": 3
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/ITooltipTextSource.cs",
+        "line": 3
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/ITooltipTitleSource.cs",
+        "line": 3
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/TooltipSource.cs",
+        "line": 43
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/UITooltipContent.cs",
+        "line": 5
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/UITooltipLine.cs",
+        "line": 19
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/UITooltipParent.cs",
+        "line": 12
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/UITooltipSpacer.cs",
+        "line": 3
+      },
+      {
+        "path": "Behaviour.UI.Tooltip/UITooltipText.cs",
+        "line": 21
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/ItemCountCell.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/TinyProgressBar.cs",
+        "line": 24
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/TextContainer.cs",
+        "line": 16
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/FontFilteringSwitch.cs",
+        "line": 24
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/HoverAction.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/HoverHighlight.cs",
+        "line": 14
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/RightClickAction.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/UIBlocksZoom.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/UIPopupMenu.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Behaviour.UI/DepressButton.cs",
+        "line": 17
+      },
+      {
+        "path": "Assets.Behaviour.UI/UIHelper.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI/UIFloatingText.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.UI/UIStatusMessage.cs",
+        "line": 31
+      },
+      {
+        "path": "Assets.Behaviour.UI/UIAlertWindow.cs",
+        "line": 38
+      },
+      {
+        "path": "Assets.Behaviour.UI/TutorialUI.cs",
+        "line": 53
+      },
+      {
+        "path": "Assets.Behaviour.UI.Shared/UITutorialArrow.cs",
+        "line": 16
+      }
+    ]
+  },
+  {
+    "id": "menus-saves-music-and-animation",
+    "title": "Menus, save selection, music, and visual feedback",
+    "category": "Reference",
+    "summary": "Menu rows, rebinding restrictions, audio timing, and cosmetic animation behavior.",
+    "sections": [
+      {
+        "title": "Save and Load rows",
+        "paragraphs": [
+          "Rows are sorted newest-first and display filename plus dd/MM/yyyy HH:mm:ss filesystem time. One click selects/highlights; double click executes the current save/load action. Save selection copies the name into the editable field; blank names do nothing; Enter saves and resumes. Load executes only after a selected file exists and routes to main-menu or in-game loading."
+        ]
+      },
+      {
+        "title": "Key rebinding restrictions",
+        "paragraphs": [
+          "The listening row accepts keyboard controls, excluding mouse, AnyKey and standalone Shift/Ctrl/Alt variants. Escape cancels listening. Only one row listens at a time; a newly selected row cancels other listeners. Apply/Cancel behavior is handled by KeyBindingsUI."
+        ]
+      },
+      {
+        "title": "Music",
+        "paragraphs": [
+          "Music volume defaults to 0.35 and sound volume to 1 in PlayerPrefs. MusicLibrary defines tracks per machine/scene. The manager shuffles its normal playlist, changes after about 300 simulated seconds, and supports fades and quiet gaps. Hovering machines queues their theme only after elapsed-time thresholds; it does not immediately restart every hovered song. Victory and prestige use dedicated tracks."
+        ]
+      },
+      {
+        "title": "Sound and cosmetic animation",
+        "paragraphs": [
+          "UISounds caches audio sources, varies pitch slightly and suppresses the same clip for 0.1 unscaled seconds to limit repeated clicks. Releasing the sound slider previews a page sound. Floating messages rise and fade; falling menu item icons and the bobbing logo are cosmetic. Prestige background wobble and victory music contain no additional progression rules."
+        ]
+      },
+      {
+        "title": "Boot and new-game transition",
+        "paragraphs": [
+          "Bootstrap initializes translation before scene load, keeps Bootstrap roots alive, applies settings and initializes Steam stats if Steam is available. New Game fades a transition, creates the player, sets zoom from screen height, loads Game, displays tutorial content, hides ordinary UI and disables controls until tutorial dismissal."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "SaveGameRow.cs",
+        "line": 22
+      },
+      {
+        "path": "SaveGameUI.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Behaviour.UI.MainMenu/LoadGameUI.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Behaviour.UI.MainMenu/KeyBindingRow.cs",
+        "line": 26
+      },
+      {
+        "path": "Assets.Behaviour.UI.MainMenu/MMFallingItem.cs",
+        "line": 23
+      },
+      {
+        "path": "Assets.Behaviour.UI.MainMenu/MMLogo.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Behaviour.UI.MainMenu/OptionsSoundSlider.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Behaviour.UI.Prestige/BackgroundWobble.cs",
+        "line": 12
+      },
+      {
+        "path": "Assets.Behaviour.UI.Prestige/VictoryPopup.cs",
+        "line": 8
+      },
+      {
+        "path": "Assets.Behaviour.Util/Bootstrap.cs",
+        "line": 26
+      },
+      {
+        "path": "Assets.Behaviour.Util/KeyBindingTooltip.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Behaviour.Util/MusicLibrary.cs",
+        "line": 3
+      },
+      {
+        "path": "Assets.Behaviour.Util/MusicManager.cs",
+        "line": 48
+      },
+      {
+        "path": "Assets.Behaviour.Util/QueuedMusic.cs",
+        "line": 3
+      },
+      {
+        "path": "Assets.Behaviour.Util/Translatable.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Behaviour.UI/UISounds.cs",
+        "line": 60
+      }
+    ]
+  },
+  {
+    "id": "implementation-data-and-serialization",
+    "title": "Data records, serialization, and implementation limits",
+    "category": "Reference",
+    "summary": "Support code that stores game state and presents names, stats, rewards, and assets.",
+    "sections": [
+      {
+        "title": "Items and stats",
+        "paragraphs": [
+          "ItemData links to its InventoryItem and serializes Type plus subtype fields; reconstruction uses the saved type string then loads subtype data. CraftingInput stores lists of consumed inputs per reagent slot and serializes them as arrays. StatSet uses an enum-indexed integer array, yields only nonzero values, and saves nonzero entries by stat name. GameConstants derives stat/enhancement/equipment counts from their enums."
+        ]
+      },
+      {
+        "title": "Resource and enhancement metadata",
+        "paragraphs": [
+          "ResourceItemType holds quota defaults (1 amount, 1.2 cost multiplier, base cost 1950 raw Gold units), optional harvest costs and a resource tag. Positive available quota can make it unlocked independently of normal recipe unlocks. Forest/Farm types defer visibility to their settings. ItemEnhancement finds its default recipe, derives its base value from recipe result count, scales described stats by quality, and serializes itself as its identifier."
+        ]
+      },
+      {
+        "title": "Quest, dungeon and war records",
+        "paragraphs": [
+          "QuestMetadata saves a quest ID and completed count. DungeonMetadata saves per-stage completed and wipe arrays and loads older records with a missing wipe array. QuestReward defines both quest and dungeon reward entry points; CustomReward invokes the configured action in either context. WarStage stores descriptions/rewards, combat requirements and completion callback; WarType registers four campaigns and exposes a two-second TickDelay."
+        ]
+      },
+      {
+        "title": "Names and localization records",
+        "paragraphs": [
+          "AdventurerName combines given/family names and culture fields. AdventurerIdentity optionally adds a title after a comma, but the shown human-details name uses HumanNameGenerator directly. CultureProfile, SurnamePattern and WeightedOption contain the syllable pools, patterns and positive weights explained in Character names. Armor, equipment slot, stat, category and worker extension methods supply @translation keys."
+        ]
+      },
+      {
+        "title": "Registers, helpers and assets",
+        "paragraphs": [
+          "Register stores named boolean flags, integer counters and string data on the player, with defaults for missing keys and JSON objects for each collection. ClassExtensions provides serialization helpers, enum-key conversion, snake_case identifiers, translated TMP text, integer-vector conversion and recursive UI cleanup/lookups. Materials supplies normal and grayscale materials. SpriteLibrary loads Icons, Icons2, Icons3 and AnimationFrames resource sheets and builds icon choices from items, nondeveloper research and currencies."
+        ]
+      },
+      {
+        "title": "Version and completeness caveats",
+        "paragraphs": [
+          "GameVersion parses a trailing major.minor.patch and compares components for old-save patches. The inspected C# defines behavior and references serialized scenes/prefabs, fonts, sprites, audio and localized text; it cannot by itself prove every inspector-assigned event, slider bound, visual asset or Steam backend rule. This article documents support code without treating record fields or dormant helper methods as secret playable systems."
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "path": "Assets.Source.Items/ItemData.cs",
+        "line": 9
+      },
+      {
+        "path": "Assets.Source.Items/CraftingInput.cs",
+        "line": 27
+      },
+      {
+        "path": "Assets.Source.Items/StatSet.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Util/GameConstants.cs",
+        "line": 6
+      },
+      {
+        "path": "Assets.Source.Items/ResourceItemType.cs",
+        "line": 45
+      },
+      {
+        "path": "Assets.Source.Items/ItemEnhancement.cs",
+        "line": 89
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestMetadata.cs",
+        "line": 11
+      },
+      {
+        "path": "Assets.Source.Adventure/QuestReward.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Adventure.Rewards/CustomReward.cs",
+        "line": 20
+      },
+      {
+        "path": "Assets.Source.Name/AdventurerIdentity.cs",
+        "line": 6
+      },
+      {
+        "path": "Assets.Source.Name/AdventurerName.cs",
+        "line": 18
+      },
+      {
+        "path": "Assets.Source.Name/CultureProfile.cs",
+        "line": 6
+      },
+      {
+        "path": "Assets.Source.Name/SurnamePattern.cs",
+        "line": 19
+      },
+      {
+        "path": "Assets.Source.Name/WeightedOption.cs",
+        "line": 13
+      },
+      {
+        "path": "Assets.Source.Flow/ElementCategoryExtensions.cs",
+        "line": 5
+      },
+      {
+        "path": "Register.cs",
+        "line": 13
+      },
+      {
+        "path": "ClassExtensions.cs",
+        "line": 15
+      },
+      {
+        "path": "Assets.Source.Util/GameVersion.cs",
+        "line": 15
+      },
+      {
+        "path": "Materials.cs",
+        "line": 27
+      },
+      {
+        "path": "SpriteLibrary.cs",
+        "line": 21
+      }
+    ]
+  }
+]

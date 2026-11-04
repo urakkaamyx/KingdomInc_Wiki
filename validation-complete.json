@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "pages": 2018,
+  "guides": 108,
+  "sourceFiles": 502,
+  "sourceLines": 56880,
+  "sourceCitations": 4120,
+  "internalLinks": 13688,
+  "tables": 4878,
+  "directDefinitionCounts": {
+    "item:": 259,
+    "recipe:": 228,
+    "enhancement:": 24,
+    "tech:": 421
+  },
+  "unexplainedSourceFiles": 0,
+  "assemblySha256": "b22adba0cd5a91f0c598cf774053553f4e6ffda668e7a57377f0859fdff2e9df",
+  "notes": [
+    "Browser interaction checks are recorded separately.",
+    "Static coverage and valid references do not imply a live gameplay test."
+  ]
+}
